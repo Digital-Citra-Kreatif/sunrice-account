@@ -45,7 +45,7 @@ final class SignInWithGoogle
         $verified = $google instanceof OAuthUser && ($google->getRaw()['email_verified'] ?? false) === true;
 
         $linked = DB::table(self::TABLE)->where('provider', 'google')->where('provider_id', $id)->value('user_id');
-        $user = $linked !== null ? Users::model()::query()->find($linked) : null;
+        $user = $linked !== null ? Users::model()::query()->whereKey($linked)->first() : null;
         if (! $user instanceof Authenticatable && $email !== '' && $verified) {
             $user = Users::findByEmail($email);
         }
