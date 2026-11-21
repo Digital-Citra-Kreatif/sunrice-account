@@ -79,3 +79,21 @@
   Callback `/account/login/google/callback` (`account.google.callback`).
 - Staff while the site shares the admin's guard, and locked accounts, can't sign in by code or
   Google. `SignedIn::$method` is `code` or `google` for them.
+- My Account:
+  - A menu (`Account::page()`, `Account::removePage()`; `MyAccount\Navigation`) with the package's
+    Overview (`/account/overview`) and Profile, and plugins' pages in `position` order, while their
+    route exists and their `visible` check says yes. Sign out from the menu.
+  - `/account` opens where a plugin says (`Account::landingUsing()`), else the announcement while
+    it's the first tab, else the dashboard, which shows plugins' cards (`Account::dashboardCard()`).
+  - Profile (`/account/profile`): name, email (a new one needs the current password and is verified
+    again while emails are verified), phone, marketing consent and plugins' fields; changing or
+    first choosing a password (a new remember token signs out other devices); asking for the
+    account to be deleted (`general.deletion_requests`), which emails staff
+    (`account_staff_deletion`). Actions `UpdateProfile`, `ChangePassword`, `RequestDeletion`; events
+    `ProfileUpdating` (change or refuse), `ProfileUpdated` (`$changed`), `PasswordChanged`,
+    `DeletionRequested`.
+  - Plugins' fields on the registration form and the profile page (`Account::registrationFields()`,
+    `Account::profileFields()`: text, textarea, select, checkbox, with their rules), kept in the
+    profile's `meta`.
+  - An announcement (settings `announcement`: `enabled`, `position` tab/above/below, `title` and
+    `message` per language), escaped, line breaks kept.

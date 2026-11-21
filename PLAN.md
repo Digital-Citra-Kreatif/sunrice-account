@@ -60,7 +60,7 @@ sunrice-commerce's customer accounts. Commerce today has all of this built in
    recipients by address and role, subject per language, publishable templates with the panel's
    mail brand, queued. Welcome, verify, reset, and to staff: new registration and deletion request.
 6. **Sign in with a code and with Google** ✅: moved from commerce, optional, off by default.
-7. **My Account**: menu, dashboard and cards, landing hook, profile (name, email, phone, marketing
+7. **My Account** ✅: menu, dashboard and cards, landing hook, profile (name, email, phone, marketing
    consent), password, deletion request, announcement; registration and profile fields; events.
 8. **Settings page**: Settings → Accounts from the section registry (general, sign-in, emails,
    announcement), with cross-checks, and the take-over API.

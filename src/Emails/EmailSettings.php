@@ -7,6 +7,8 @@ namespace Sunrice\Account\Emails;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Sunrice\Account\Auth\Users;
 use Sunrice\Account\Settings\AccountSettings;
 
@@ -80,6 +82,30 @@ final class EmailSettings
         }
 
         return array_values(array_filter($stored, fn (mixed $role): bool => is_string($role) && $role !== ''));
+    }
+
+    /**
+     * Sends a staff email (while it's on) to the users with its roles and to
+     * its own addresses, each once.
+     */
+    public function notifyStaff(string $key, Notification $notification): void
+    {
+        if (! $this->enabled($key)) {
+            return;
+        }
+        $staff = $this->staff($key);
+        $known = [];
+        foreach ($staff as $user) {
+            $email = $user->getAttribute('email');
+            $known[] = is_string($email) ? mb_strtolower($email) : '';
+        }
+        if ($staff->isNotEmpty()) {
+            NotificationFacade::send($staff, $notification);
+        }
+        $addresses = array_values(array_diff($this->addresses($key), $known));
+        if ($addresses !== []) {
+            NotificationFacade::route('mail', $addresses)->notify($notification);
+        }
     }
 
     /** @return Collection<int, Model&Authenticatable> the users with a staff email's roles */

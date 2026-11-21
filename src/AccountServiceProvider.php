@@ -10,9 +10,11 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Sunrice\Account\Auth\SiteGuard;
 use Sunrice\Account\Emails\Emails;
+use Sunrice\Account\Events\DeletionRequested;
 use Sunrice\Account\Events\Registered;
 use Sunrice\Account\Events\Verified;
 use Sunrice\Account\Http\Middleware;
+use Sunrice\Account\Listeners\NotifyStaffOfDeletionRequest;
 use Sunrice\Account\Listeners\NotifyStaffOfRegistration;
 use Sunrice\Account\Listeners\SendWelcomeEmail;
 use Sunrice\Account\Routing\AccountRoutes;
@@ -45,6 +47,9 @@ final class AccountServiceProvider extends PackageServiceProvider
         $this->app->singleton(Account::class);
         $this->app->singleton(AccountRoutes::class);
         $this->app->singleton(Emails::class);
+        $this->app->singleton(MyAccount\Navigation::class);
+        $this->app->singleton(MyAccount\Dashboard::class);
+        $this->app->singleton(MyAccount\Fields::class);
         // Read once per request (and per queued job).
         $this->app->scoped(AccountSettings::class);
 
@@ -79,5 +84,12 @@ final class AccountServiceProvider extends PackageServiceProvider
 
         Event::listen([Registered::class, Verified::class], SendWelcomeEmail::class);
         Event::listen(Registered::class, NotifyStaffOfRegistration::class);
+        Event::listen(DeletionRequested::class, NotifyStaffOfDeletionRequest::class);
+
+        $navigation = $this->app->make(MyAccount\Navigation::class);
+        $navigation->add('announcement', fn (): string => $this->app->make(MyAccount\Announcement::class)->title(), 'account.announcement',
+            fn (): bool => $this->app->make(MyAccount\Announcement::class)->position() === 'tab', -10);
+        $navigation->add('overview', fn (): string => (string) __('account::account.dashboard.title'), 'account.overview', position: 0);
+        $navigation->add('profile', fn (): string => (string) __('account::account.profile.title'), 'account.profile', position: 90);
     }
 }

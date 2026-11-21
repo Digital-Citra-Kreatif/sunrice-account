@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Validator;
 use Sunrice\Account\Auth\Users;
 use Sunrice\Account\Events\Registered;
 use Sunrice\Account\Events\Registering;
+use Sunrice\Account\MyAccount\Fields;
 use Sunrice\Account\Notifications\ExistingAccountNotification;
 use Sunrice\Account\Profiles\Models\Profile;
 use Sunrice\Account\Settings\AccountSettings;
@@ -28,7 +29,7 @@ use Sunrice\Admin\Auth\PasswordPolicy;
  */
 final class RegisterAccount
 {
-    public function __construct(private AccountSettings $settings, private AssignDefaultRoles $roles) {}
+    public function __construct(private AccountSettings $settings, private AssignDefaultRoles $roles, private Fields $fields) {}
 
     /**
      * @param  array<array-key, mixed>  $input
@@ -36,7 +37,8 @@ final class RegisterAccount
      */
     public function handle(array $input, string $locale): ?Authenticatable
     {
-        $data = Validator::make($input, $this->rules(), [], [
+        $fields = $this->fields->registration();
+        $data = Validator::make($input, [...$this->rules(), ...Fields::rules($fields)], [], [
             'terms' => __('account::auth.register.terms_name'),
         ])->validate();
 
@@ -45,6 +47,7 @@ final class RegisterAccount
             'email' => Users::normalizeEmail(Input::string($data, 'email')),
             'phone' => Input::nullableString($data, 'phone'),
             'accepts_marketing' => (bool) ($data['accepts_marketing'] ?? false),
+            'fields' => Fields::values($fields, $data),
         ], $locale);
         event($event);
         $values = $event->data;
@@ -74,6 +77,11 @@ final class RegisterAccount
                 'accepts_marketing' => $consent,
                 'marketing_consent_at' => $consent ? now() : null,
             ])->save();
+            $extra = [];
+            foreach (is_array($values['fields'] ?? null) ? $values['fields'] : [] as $key => $value) {
+                $extra[(string) $key] = $value;
+            }
+            Fields::store($profile, $extra);
 
             return [$user, $profile];
         });

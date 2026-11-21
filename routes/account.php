@@ -11,13 +11,20 @@ use Illuminate\Support\Facades\Route;
 use Spatie\Honeypot\ProtectAgainstSpam;
 use Sunrice\Account\Http\Controllers\Auth;
 use Sunrice\Account\Http\Controllers\DashboardController;
+use Sunrice\Account\Http\Controllers\ProfileController;
 use Sunrice\Account\Http\Middleware\Authenticate;
 use Sunrice\Account\Http\Middleware\RedirectIfAuthenticated;
 use Sunrice\Account\Routing\AccountRoutes;
 
 /** @var string $suffix */
 Route::middleware(Authenticate::class)->group(function () use ($suffix): void {
-    Route::get('/', DashboardController::class)->name('account.dashboard'.$suffix);
+    Route::get('/', [DashboardController::class, 'landing'])->name('account.dashboard'.$suffix);
+    Route::get('overview', [DashboardController::class, 'overview'])->name('account.overview'.$suffix);
+    Route::get('announcement', [DashboardController::class, 'announcement'])->name('account.announcement'.$suffix);
+    Route::get('profile', [ProfileController::class, 'show'])->name('account.profile'.$suffix);
+    Route::put('profile', [ProfileController::class, 'update'])->name('account.profile.update'.$suffix);
+    Route::put('profile/password', [ProfileController::class, 'password'])->name('account.profile.password'.$suffix);
+    Route::post('profile/delete', [ProfileController::class, 'requestDeletion'])->name('account.profile.delete'.$suffix);
     Route::post('logout', [Auth\LoginController::class, 'destroy'])->name('account.logout'.$suffix);
 });
 

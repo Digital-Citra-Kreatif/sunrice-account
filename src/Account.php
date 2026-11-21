@@ -9,6 +9,9 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Sunrice\Account\Auth\SiteGuard;
 use Sunrice\Account\Emails\Emails;
 use Sunrice\Account\Emails\EmailSettings;
+use Sunrice\Account\MyAccount\Dashboard;
+use Sunrice\Account\MyAccount\Fields;
+use Sunrice\Account\MyAccount\Navigation;
 use Sunrice\Account\Profiles\Models\Profile;
 use Sunrice\Account\Routing\AccountRoutes;
 use Sunrice\Account\Settings\AccountSettings;
@@ -82,5 +85,65 @@ final class Account
     public function url(string $name, array $parameters = [], ?string $locale = null): string
     {
         return AccountRoutes::url($name, $parameters, $locale);
+    }
+
+    /**
+     * A page in My Account's menu (its route: from Account::routes(), or any).
+     * Shown in `position` order (the package's: overview 0, profile 90),
+     * while `visible` (if given) says yes.
+     *
+     * @param  string|Closure(): string  $label
+     * @param  (Closure(): bool)|null  $visible
+     */
+    public function page(string $key, string|Closure $label, string $route, ?Closure $visible = null, int $position = 100, ?string $icon = null): void
+    {
+        app(Navigation::class)->add($key, $label, $route, $visible, $position, $icon);
+    }
+
+    /** Takes a page off the menu (the package's "overview" or "profile" too). */
+    public function removePage(string $key): void
+    {
+        app(Navigation::class)->remove($key);
+    }
+
+    /**
+     * A card on My Account's dashboard: a view, given `$user` and what `$data` returns.
+     *
+     * @param  (Closure(Authenticatable): array<string, mixed>)|null  $data
+     */
+    public function dashboardCard(string $key, string $view, ?Closure $data = null, int $position = 100): void
+    {
+        app(Dashboard::class)->card($key, $view, $data, $position);
+    }
+
+    /**
+     * Where /account opens: the URL the closure gives (commerce: the orders),
+     * or the dashboard when it gives null.
+     *
+     * @param  Closure(Authenticatable): ?string  $landing
+     */
+    public function landingUsing(Closure $landing): void
+    {
+        app(Dashboard::class)->landingUsing($landing);
+    }
+
+    /**
+     * Extra fields on the registration form, kept in the profile's meta.
+     *
+     * @param  Closure(): list<array<string, mixed>>  $fields  see MyAccount\Fields
+     */
+    public function registrationFields(Closure $fields): void
+    {
+        app(Fields::class)->addToRegistration($fields);
+    }
+
+    /**
+     * Extra fields on the profile page, kept in the profile's meta.
+     *
+     * @param  Closure(): list<array<string, mixed>>  $fields  see MyAccount\Fields
+     */
+    public function profileFields(Closure $fields): void
+    {
+        app(Fields::class)->addToProfile($fields);
     }
 }

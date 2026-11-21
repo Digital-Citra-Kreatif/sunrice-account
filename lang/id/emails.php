@@ -15,4 +15,9 @@ return [
         'intro' => 'Seseorang membuat akun di :site.',
         'details' => ':name (:email)',
     ],
+    'staff_deletion' => [
+        'subject' => 'Permintaan penghapusan akun di :site: :name',
+        'intro' => 'Sebuah akun di :site meminta untuk dihapus.',
+        'details' => ':name (:email). Tangani di admin.',
+    ],
 ];

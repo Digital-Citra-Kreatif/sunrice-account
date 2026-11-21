@@ -31,6 +31,7 @@
             <label class="account-field"><span>{{ __('account::auth.fields.password_confirmation') }}</span>
                 <input type="password" name="password_confirmation" required autocomplete="new-password">
             </label>
+            @include(\Sunrice\Account\View\Layout::view('partials.fields'), ['fields' => $fields, 'values' => []])
             @if ($marketing)
                 <label class="account-check"><input type="checkbox" name="accepts_marketing" value="1" @checked(old('accepts_marketing'))> {{ __('account::auth.register.marketing') }}</label>
             @endif
