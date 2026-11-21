@@ -6,15 +6,21 @@ namespace Sunrice\Account;
 
 use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 use Sunrice\Account\Auth\SiteGuard;
 use Sunrice\Account\Emails\Emails;
 use Sunrice\Account\Emails\EmailSettings;
+use Sunrice\Account\Http\Middleware\Authenticate;
 use Sunrice\Account\MyAccount\Dashboard;
 use Sunrice\Account\MyAccount\Fields;
 use Sunrice\Account\MyAccount\Navigation;
 use Sunrice\Account\Profiles\Models\Profile;
 use Sunrice\Account\Routing\AccountRoutes;
 use Sunrice\Account\Settings\AccountSettings;
+use Sunrice\Admin\Panel;
 
 /**
  * The account package's public API (also the `Account` facade). Plugins
@@ -71,6 +77,41 @@ final class Account
     public function user(): ?Authenticatable
     {
         return SiteGuard::get()->user();
+    }
+
+    /**
+     * The names of an account's roles (the panel's guard's), sorted: what
+     * a plugin checks to let some accounts in (members-only pages).
+     *
+     * @return list<string>
+     */
+    public function roles(Authenticatable $user): array
+    {
+        if (! $user instanceof Model) {
+            return [];
+        }
+        $assigned = DB::table(self::permissionConfig('table_names.model_has_roles', 'model_has_roles'))
+            ->where(self::permissionConfig('column_names.model_morph_key', 'model_id'), $user->getKey())
+            ->where('model_type', $user->getMorphClass())
+            ->select(self::permissionConfig('column_names.role_pivot_key', 'role_id'));
+        $names = Role::query()->where('guard_name', app(Panel::class)->getGuard())
+            ->whereIn((new Role)->getKeyName(), $assigned)->orderBy('name')->pluck('name')->all();
+
+        return array_values(array_filter($names, is_string(...)));
+    }
+
+    /**
+     * Send a guest to the sign-in page, and back to `$returnTo` (by
+     * default the page they asked for) once they've signed in.
+     */
+    public function redirectToSignIn(?string $returnTo = null): RedirectResponse
+    {
+        $request = request();
+        if ($request->hasSession()) {
+            $request->session()->put(Authenticate::INTENDED, $returnTo ?? $request->fullUrl());
+        }
+
+        return redirect(AccountRoutes::url('account.login'));
     }
 
     /** The profile of a user (created on first need). */
@@ -164,5 +205,13 @@ final class Account
     public function profileFields(Closure $fields): void
     {
         app(Fields::class)->addToProfile($fields);
+    }
+
+    /** A table or column name of spatie/laravel-permission's config. */
+    private static function permissionConfig(string $key, string $default): string
+    {
+        $name = config("permission.{$key}");
+
+        return is_string($name) && $name !== '' ? $name : $default;
     }
 }

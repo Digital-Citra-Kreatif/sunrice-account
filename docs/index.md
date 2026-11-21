@@ -102,6 +102,9 @@ $profile->metaValue('shop.tax_id');
 | `member` role | Given to new accounts. No admin permissions. Created by `php artisan sunrice:roles` |
 | `account.settings.accounts` | Edit Settings → Accounts (a privileged permission) |
 
+`Account::roles($user)` gives the names of an account's roles (on the panel's guard), sorted: what a
+plugin checks to let only some accounts in.
+
 ## Pages and routes
 
 Account pages live under the account prefix: `/account` (`sunrice-account.paths.prefix`, or Settings
@@ -136,6 +139,10 @@ same languages, and the middleware:
 | `account.guest` | Guests only (sign in, register); signed-in accounts go to My Account |
 | `account.noindex` | `X-Robots-Tag: noindex`, `Cache-Control: private, no-store`, and the layout's robots tag |
 | `account.verified` | After `account.auth`: a verified email while verification is required; others are asked to verify first |
+
+To send a guest to sign in from a page of your own (a members-only page), return
+`Account::redirectToSignIn()`: once signed in they come back to the page they asked for (or to the
+`$returnTo` you pass).
 
 A visitor signed in to an account always gets fresh pages from the CMS's page cache.
 

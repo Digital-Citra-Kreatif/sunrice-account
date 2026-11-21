@@ -11,7 +11,8 @@
     .account-main *, .account-main *::before, .account-main *::after { box-sizing: border-box; }
     .account-main h1 { font-size: 1.75rem; line-height: 1.2; margin: 0 0 1.25rem; letter-spacing: -0.01em; }
     .account-main h2 { font-size: 1.15rem; margin: 2rem 0 .75rem; }
-    .account-main a { color: inherit; text-underline-offset: 3px; }
+    .account-main a:not(.account-button) { color: inherit; text-underline-offset: 3px; }
+    .account-actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
     .account-auth { max-width: 26rem; margin: 2rem auto; padding: 2rem; background: var(--account-card); border: 1px solid var(--account-line); border-radius: 12px; }
     .account-form { display: flex; flex-direction: column; gap: 1rem; margin: 0 0 1rem; }
     .account-field { display: flex; flex-direction: column; gap: .35rem; font-size: .9rem; font-weight: 500; }
