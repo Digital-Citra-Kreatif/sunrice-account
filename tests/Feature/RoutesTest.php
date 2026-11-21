@@ -61,11 +61,14 @@ it('adds other plugins\' pages under the account prefix, in every language', fun
 });
 
 it('sends signed-in accounts away from guest-only pages', function () {
-    Route::middleware(['web', 'account.guest'])->get('account/join', fn () => 'join')->name('test.join');
+    Account::routes(function (string $suffix): void {
+        Route::get('join', fn () => 'join')->middleware('account.guest')->name('test.join'.$suffix);
+    }, signedIn: false);
     $this->get('/account/join')->assertOk();
 
     $this->actingAs(siteUser(), 'account');
     $this->get('/account/join')->assertRedirect('/account');
+    $this->get('/en/account/join')->assertRedirect('/en/account');
 });
 
 it('takes the account prefix from the settings page, else from config', function () {
