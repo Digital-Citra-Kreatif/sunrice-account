@@ -1,0 +1,65 @@
+{
+    "name": "sunrice/account",
+    "description": "Site accounts for Sunrice CMS: registration, sign-in, password reset, email verification, a My Account area other plugins extend, account emails, roles and settings.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "sunrice",
+        "laravel",
+        "accounts",
+        "authentication",
+        "members"
+    ],
+    "require": {
+        "php": "^8.4",
+        "illuminate/contracts": "^13.0",
+        "illuminate/support": "^13.0",
+        "spatie/laravel-package-tools": "^1.93",
+        "sunrice/admin": "^0.8",
+        "sunrice/cms": "^0.8"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.0",
+        "orchestra/testbench": "^11.0",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sunrice\\Account\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Sunrice\\Account\\Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Sunrice\\Account\\AccountServiceProvider"
+            ],
+            "aliases": {
+                "Account": "Sunrice\\Account\\Facades\\Account"
+            },
+            "sunrice-plugins": [
+                "Sunrice\\Account\\AccountPlugin"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "lint": "pint --test",
+        "format": "pint",
+        "analyse": "phpstan analyse --memory-limit=1G"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable"
+}
