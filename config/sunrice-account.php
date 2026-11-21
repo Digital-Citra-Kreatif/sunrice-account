@@ -54,6 +54,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Sign in with Google
+    |--------------------------------------------------------------------------
+    |
+    | Used when config/services.php has no `google` block of its own. The
+    | callback URL to give Google is /account/login/google/callback.
+    |
+    */
+
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Settings defaults
     |--------------------------------------------------------------------------
     |
@@ -79,6 +94,11 @@ return [
             'terms_url' => null,
             // Where people go after signing in, a path on the site (null: My Account).
             'redirect_after_login' => null,
+            // Sign in with a code sent by email, and how long a code works (minutes, 1–60).
+            'login_code' => false,
+            'code_minutes' => 10,
+            // Sign in with Google (needs the Google credentials below).
+            'google_login' => false,
         ],
         // Per email key (Account::emails()): enabled, subject (per language), and for staff
         // emails addresses and roles (default: super admins and administrators).
