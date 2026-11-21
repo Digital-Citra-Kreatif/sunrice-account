@@ -179,7 +179,7 @@ final class AccountSettings extends Settings
 
     public static function form(Form $form): Form
     {
-        return $form->schema([...self::sections()]);
+        return $form->schema(array_values(self::sections()));
     }
 
     /**
