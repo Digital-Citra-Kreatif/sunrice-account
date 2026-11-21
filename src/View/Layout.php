@@ -15,17 +15,32 @@ namespace Sunrice\Account\View;
  */
 final class Layout
 {
-    /** The site layout account pages extend. */
+    /**
+     * The site layout account pages extend.
+     *
+     * @return view-string
+     */
     public static function site(): string
     {
         $layout = config('sunrice-account.layout');
+        if (is_string($layout) && $layout !== '' && view()->exists($layout)) {
+            /** @var view-string $layout (it exists) */
+            return $layout;
+        }
 
-        return is_string($layout) && $layout !== '' && view()->exists($layout) ? $layout : self::view('layouts.site');
+        return self::view('layouts.site');
     }
 
-    /** The app's copy of an account view when it has one, else the package's. */
+    /**
+     * The app's copy of an account view when it has one, else the package's.
+     *
+     * @return view-string
+     */
     public static function view(string $name): string
     {
-        return view()->exists("account.{$name}") ? "account.{$name}" : "account::{$name}";
+        /** @var view-string $view (the app's when it exists; the package always has its own) */
+        $view = view()->exists("account.{$name}") ? "account.{$name}" : "account::{$name}";
+
+        return $view;
     }
 }
