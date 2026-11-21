@@ -1,0 +1,80 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Support\Facades\Route;
+use Sunrice\Account\Facades\Account;
+use Sunrice\Account\Http\Middleware\Authenticate;
+use Sunrice\Account\Routing\AccountRoutes;
+
+it('shows My Account to a signed-in account, in the language of the address', function () {
+    $this->actingAs(siteUser(), 'account');
+
+    $this->get('/account')->assertOk()->assertSee('Akun saya')->assertSee('Halo, Ana.');
+    $this->get('/en/account')->assertOk()->assertSee('My account')->assertSee('Hello, Ana.');
+});
+
+it('keeps account pages out of search engines and shared caches', function () {
+    $this->actingAs(siteUser(), 'account');
+
+    $this->get('/account')
+        ->assertHeader('X-Robots-Tag', 'noindex, nofollow')
+        ->assertHeader('Referrer-Policy', 'no-referrer')
+        ->assertSee('<meta name="robots"', false);
+    expect($this->get('/account')->headers->get('Cache-Control'))->toContain('no-store')->toContain('private');
+});
+
+it('refuses guests while there is no sign-in page', function () {
+    $this->get('/account')->assertUnauthorized();
+});
+
+it('sends guests to the sign-in page, then back where they were going', function () {
+    Route::middleware('web')->get('account/login', fn () => 'sign in')->name('account.login');
+    Route::getRoutes()->refreshNameLookups();
+
+    $this->get('/account?tab=1')->assertRedirect('/account/login')
+        ->assertSessionHas(Authenticate::INTENDED, 'http://localhost/account?tab=1');
+});
+
+it('doesn\'t let an admin session into My Account', function () {
+    $this->actingAs(siteUser(), 'web');
+
+    $this->get('/account')->assertUnauthorized();
+});
+
+it('adds other plugins\' pages under the account prefix, in every language', function () {
+    Account::routes(function (string $suffix): void {
+        Route::get('orders', fn () => 'my orders')->name('test.orders'.$suffix);
+    });
+    Account::routes(function (string $suffix): void {
+        Route::get('help', fn () => 'help for all')->name('test.help'.$suffix);
+    }, signedIn: false);
+
+    $this->get('/account/orders')->assertUnauthorized();
+    $this->get('/account/help')->assertOk()->assertSee('help for all')->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+
+    $this->actingAs(siteUser(), 'account');
+    $this->get('/account/orders')->assertOk()->assertSee('my orders');
+    $this->get('/en/account/orders')->assertOk();
+    expect(Account::url('test.orders', locale: 'en'))->toBe('http://localhost/en/account/orders')
+        ->and(Account::url('test.orders', locale: 'id'))->toBe('http://localhost/account/orders');
+});
+
+it('sends signed-in accounts away from guest-only pages', function () {
+    Route::middleware(['web', 'account.guest'])->get('account/join', fn () => 'join')->name('test.join');
+    $this->get('/account/join')->assertOk();
+
+    $this->actingAs(siteUser(), 'account');
+    $this->get('/account/join')->assertRedirect('/account');
+});
+
+it('takes the account prefix from the settings page, else from config', function () {
+    expect(AccountRoutes::prefix())->toBe('account');
+
+    config(['sunrice-account.paths.prefix' => '/members/']);
+    expect(AccountRoutes::prefix())->toBe('members');
+
+    Account::settings()->saveSection('general', ['path' => 'my-account']);
+    expect(AccountRoutes::prefix())->toBe('my-account')
+        ->and(AccountRoutes::path('login'))->toBe('login');
+});

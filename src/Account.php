@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Sunrice\Account;
 
+use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Sunrice\Account\Auth\SiteGuard;
 use Sunrice\Account\Profiles\Models\Profile;
+use Sunrice\Account\Routing\AccountRoutes;
 use Sunrice\Account\Settings\AccountSettings;
 
 /**
@@ -39,5 +41,32 @@ final class Account
     public function profile(Authenticatable $user): Profile
     {
         return Profile::forUser($user);
+    }
+
+    /**
+     * Pages under the account prefix (/account/orders…), in every language
+     * of the site. They are for signed-in accounts (`account.auth`) unless
+     * $signedIn is false. Name them with the suffix the closure receives:
+     *
+     *     Account::routes(function (string $suffix) {
+     *         Route::get('orders', OrdersController::class)->name('shop.account.orders'.$suffix);
+     *     });
+     *
+     * @param  Closure(string): void  $routes
+     */
+    public function routes(Closure $routes, bool $signedIn = true): void
+    {
+        app(AccountRoutes::class)->extend($routes, $signedIn);
+    }
+
+    /**
+     * An account page's URL in the current (or given) language:
+     * Account::url('account.dashboard').
+     *
+     * @param  array<string, mixed>  $parameters
+     */
+    public function url(string $name, array $parameters = [], ?string $locale = null): string
+    {
+        return AccountRoutes::url($name, $parameters, $locale);
     }
 }

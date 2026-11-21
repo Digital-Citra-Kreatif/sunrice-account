@@ -27,6 +27,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Addresses
+    |--------------------------------------------------------------------------
+    |
+    | The account pages live under `prefix` (/account, and /en/account in the
+    | site's other languages); the settings page can give the prefix another
+    | value (general.path). The other paths are under the prefix.
+    |
+    | `layout` is the site layout account pages extend: by default the CMS's
+    | site layout (resources/views/cms/layout.blade.php); when it doesn't
+    | exist, the package's minimal one. An app overrides any account view by
+    | publishing it to resources/views/account/.
+    |
+    */
+
+    'paths' => [
+        'prefix' => 'account',
+        'login' => 'login',
+        'register' => 'register',
+        'forgot_password' => 'forgot-password',
+        'reset_password' => 'reset-password',
+        'verify' => 'verify',
+    ],
+
+    'layout' => 'cms.layout',
+
+    /*
+    |--------------------------------------------------------------------------
     | Settings defaults
     |--------------------------------------------------------------------------
     |
@@ -42,6 +69,8 @@ return [
             'verify_email' => true,
             // Roles given to new accounts ("member" is created by `sunrice:roles`).
             'default_roles' => ['member'],
+            // The account address prefix, when set in the settings page (null: paths.prefix).
+            'path' => null,
         ],
     ],
 
