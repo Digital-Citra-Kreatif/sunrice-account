@@ -12,7 +12,7 @@ sunrice-commerce's customer accounts. Commerce today has all of this built in
 | Package | `sunrice/account`, namespace `Sunrice\Account\`, plugin id `account`, requires `sunrice/admin` and `sunrice/cms` ^0.8 |
 | Guard | `account` session guard, on the panel guard's user provider. Same users table, separate session |
 | Default role | `member`, no admin permissions, seeded by `sunrice:roles`. Commerce adds `customer` |
-| Sign-in methods | Password, emailed one-time code (the package's own `account_login_codes`, so the app's user model needs no extra trait) and Google (laravel/socialite), the last two optional and off by default |
+| Sign-in methods | Password, emailed one-time code (spatie/laravel-one-time-passwords: the user model uses its `HasOneTimePasswords` trait; the panel's two-factor login moves onto it too) and Google (laravel/socialite), the last two optional and off by default |
 | Account URL | In config (`paths`), overridable in the settings page. Routes read it when they're registered; saving it clears the route cache |
 | Admin | Administration → Accounts (list, roles, reset link, mark verified, deletion requests, anonymize). Commerce's Shop → Customers extends it |
 | Plugin data | Plugins add pages, dashboard cards, profile and registration fields (stored in `account_profiles.meta`) and listen to events |

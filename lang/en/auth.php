@@ -85,7 +85,7 @@ return [
         'none' => 'There\'s no code for this email: ask for a new one.',
         'expired' => 'This code has expired: ask for a new one.',
         'origin' => 'Use the code in the browser that asked for it.',
-        'attempts' => 'Too many wrong tries: ask for a new code.',
+        'attempts' => 'Too many tries: wait a minute, then try again.',
         'incorrect' => 'This code isn\'t right.',
         'mail' => [
             'subject' => 'Your sign-in code for :site: :code',

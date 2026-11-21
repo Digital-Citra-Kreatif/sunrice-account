@@ -62,7 +62,7 @@ it('answers the same for an email without an account', function () {
     $this->assertGuest('account');
 });
 
-it('refuses wrong codes, and every code after five wrong tries', function () {
+it('refuses wrong codes, and every try for a minute after five', function () {
     siteUser();
     $code = requestCode();
     $wrong = $code === '000000' ? '111111' : '000000';
@@ -74,7 +74,7 @@ it('refuses wrong codes, and every code after five wrong tries', function () {
     $this->post('/account/login/code/check', ['code' => $wrong]);
     $this->post('/account/login/code/check', ['code' => $code])->assertSessionHasErrors('code');
 
-    expect(session('errors')->first('code'))->toBe('Terlalu banyak percobaan salah: minta kode baru.');
+    expect(session('errors')->first('code'))->toBe('Terlalu banyak percobaan: tunggu sebentar, lalu coba lagi.');
     $this->assertGuest('account');
 });
 

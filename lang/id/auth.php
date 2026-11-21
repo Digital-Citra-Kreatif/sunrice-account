@@ -85,7 +85,7 @@ return [
         'none' => 'Tidak ada kode untuk email ini: minta kode baru.',
         'expired' => 'Kode ini sudah kedaluwarsa: minta kode baru.',
         'origin' => 'Gunakan kode di browser yang memintanya.',
-        'attempts' => 'Terlalu banyak percobaan salah: minta kode baru.',
+        'attempts' => 'Terlalu banyak percobaan: tunggu sebentar, lalu coba lagi.',
         'incorrect' => 'Kode ini tidak benar.',
         'mail' => [
             'subject' => 'Kode masuk Anda untuk :site: :code',

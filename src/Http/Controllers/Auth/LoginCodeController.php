@@ -65,6 +65,9 @@ final class LoginCodeController
         abort_unless($codes->available(), 404);
         $request->validate(['code' => ['required', 'string', 'max:20']]);
         $email = $request->session()->get(self::SESSION);
+        // On top of the package's 5 a minute per account: 10 tries per 10 minutes per email + IP, 30 per IP.
+        Throttle::check('code-check', $request, is_string($email) ? $email : '', 10, 30, 'code');
+        Throttle::hit('code-check', $request, is_string($email) ? $email : '', 600);
         $user = is_string($email) ? Users::findByEmail($email) : null;
         if ($user === null || SiteGuard::refusesStaff($user) || $accounts->isLocked($user)) {
             throw ValidationException::withMessages(['code' => __('account::auth.code.incorrect')]);

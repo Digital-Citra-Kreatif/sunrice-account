@@ -159,11 +159,29 @@ language and marketing consent.
 
 ### Sign in with a code or with Google
 
-**Emailed code** (`general.login_code`): the sign-in page offers "Email me a sign-in code". The
-code has 6 digits, works for `general.code_minutes` minutes, once, and only in the browser that
-asked for it, with 5 tries; asking again replaces it (at most once a minute). Any email gets the
-same answer. A code proves the email, so it verifies an unverified one. Codes are kept hashed in
-`account_login_codes`: the user model needs nothing extra.
+**Emailed code** (`general.login_code`): the sign-in page offers "Email me a sign-in code". It
+uses [spatie/laravel-one-time-passwords](https://github.com/spatie/laravel-one-time-passwords), so
+before turning it on:
+
+- add its trait to your user model:
+
+  ```php
+  use Spatie\OneTimePasswords\Models\Concerns\HasOneTimePasswords;
+
+  class User extends Authenticatable
+  {
+      use HasOneTimePasswords, HasRoles, Notifiable;
+  }
+  ```
+
+- publish and run its migration: `php artisan vendor:publish --tag=one-time-passwords-migrations`,
+  then `php artisan migrate`.
+
+The code has 6 digits, works for `general.code_minutes` minutes, once, and only in the browser
+that asked for it; 5 tries a minute per account, and 10 per 10 minutes per email and IP. Asking
+again replaces it (at most once a minute). Any email gets the same answer. A code proves the email,
+so it verifies an unverified one. Codes go out as the `account_login_code` account email, not the
+package's own notification, and sign in on the account guard only.
 
 **Google** (`general.google_login`): set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (or
 `services.google`) and give Google the callback URL `https://your-site/account/login/google/callback`.

@@ -10,17 +10,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Emailed sign-in codes: one per user, hashed, tied to the browser that asked for it.
-        Schema::create('account_login_codes', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('user_id')->unique();
-            $table->string('code_hash');
-            $table->string('origin', 64);
-            $table->unsignedTinyInteger('attempts')->default(0);
-            $table->timestamp('expires_at')->index();
-            $table->timestamps();
-        });
-
         // Sign-in providers linked to a user (Google).
         Schema::create('account_social_accounts', function (Blueprint $table) {
             $table->id();
@@ -37,6 +26,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('account_social_accounts');
-        Schema::dropIfExists('account_login_codes');
     }
 };

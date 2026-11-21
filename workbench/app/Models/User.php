@@ -6,11 +6,12 @@ namespace Workbench\App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\OneTimePasswords\Models\Concerns\HasOneTimePasswords;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasRoles, Notifiable;
+    use HasOneTimePasswords, HasRoles, Notifiable;
 
     protected $guarded = [];
 
