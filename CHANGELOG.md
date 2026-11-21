@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0 (2026-11-21)
 
 - **Accessibility**: a field's error is tied to its input (`aria-invalid`, `aria-describedby`;
   `partials.aria`), and a form's errors are announced once, by a summary above it, instead of one
