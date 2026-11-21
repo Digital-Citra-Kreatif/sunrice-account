@@ -112,3 +112,16 @@ it('says so when Google fails', function () {
 
     $this->get('/account/login/google/callback')->assertRedirect('/account/login')->assertSessionHasErrors('email');
 });
+
+it('takes back an unverified account from whoever made it, when Google proves its email', function () {
+    // Someone made an account with Gita's address and a password of theirs, before she came.
+    siteUser(['name' => 'Not Gita', 'email' => 'gita@example.com', 'password' => 'attacker-pass', 'email_verified_at' => null]);
+    googleReturns();
+
+    $this->get('/account/login/google/callback')->assertRedirect('/account');
+    $this->post('/account/logout');
+
+    $this->post('/account/login', ['email' => 'gita@example.com', 'password' => 'attacker-pass'])->assertSessionHasErrors('email');
+    $this->assertGuest('account');
+    expect(Account::profile(User::query()->where('email', 'gita@example.com')->sole())->password_set)->toBeFalse();
+});

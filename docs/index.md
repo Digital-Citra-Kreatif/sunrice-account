@@ -142,7 +142,8 @@ same languages, and the middleware:
 
 To send a guest to sign in from a page of your own (a members-only page), return
 `Account::redirectToSignIn()`: once signed in they come back to the page they asked for (or to the
-`$returnTo` you pass).
+`$returnTo` you pass: a path like `/checkout` or a URL of this site; anything else is ignored, so a
+visitor's `?return=` can't send them to another site).
 
 A visitor signed in to an account always gets fresh pages from the CMS's page cache.
 
@@ -255,6 +256,28 @@ Verification::url($user, 'en');   // a fresh signed link
 
 Staff while the site shares the admin's guard, and locked accounts, are verified by their link but
 not signed in by it.
+
+### Keeping accounts safe
+
+- **Taking back an unverified account.** Anyone can register with an address that isn't theirs; the
+  account stays unverified. When the address's owner later signs in with an emailed code or with
+  Google, which prove the address, that account's password is cleared and its other sessions end
+  before it's verified, so whoever made it keeps no way in. The owner can then choose a password
+  on the profile page.
+- **The verification link** signs in only the first time, and never over someone already signed
+  in: opened again, or by someone else, it verifies and sends them to sign in.
+- **Ending sessions.** A locked account (the panel's security page) is signed out of the site on
+  its next account page, and so is every session that signed in before "Sign out everywhere".
+  Changing or resetting the password does that to the account's other sessions (`account.auth`
+  checks; site sign-ins note when they started, like the admin's).
+- **Whether an email has an account** isn't told by sign-in (a wrong password and an unknown email
+  take as long), the code check (every failure reads the same) or the forms that email. Changing
+  the profile's address to one that's taken says so only after the current password is right, at
+  most 5 wrong tries in 10 minutes. With verification off, registration still signs a new address
+  in at once and answers "check your email" for a taken one.
+- **Limits:** 20 wrong passwords an hour for one email from any IP, 5 sign-in codes an hour to one
+  email, 5 wrong current passwords in 10 minutes on the profile page, besides the per-IP ones.
+- Names and addresses visitors type are text in staff emails, never Markdown links.
 
 ### Events
 

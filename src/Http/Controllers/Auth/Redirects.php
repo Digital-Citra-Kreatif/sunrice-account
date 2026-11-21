@@ -37,10 +37,34 @@ final class Redirects
         return url(Locales::prefix(app()->getLocale()) ?: '/');
     }
 
-    private static function onThisSite(Request $request, string $url): bool
+    /**
+     * Whether `$url` is an address on this site (a full URL with this
+     * host): no backslashes, control characters or user info, which
+     * browsers read differently from parse_url() (`https://evil\@site/`).
+     */
+    public static function onThisSite(Request $request, string $url): bool
     {
-        $host = parse_url($url, PHP_URL_HOST);
+        if (preg_match('/[\\\\\x00-\x20\x7f]/', $url) === 1) {
+            return false;
+        }
+        $parts = parse_url($url);
+        if ($parts === false || isset($parts['user']) || isset($parts['pass'])) {
+            return false;
+        }
+        $scheme = strtolower($parts['scheme'] ?? '');
+        $host = $parts['host'] ?? null;
 
-        return is_string($host) && strcasecmp($host, $request->getHost()) === 0;
+        return in_array($scheme, ['http', 'https'], true) && is_string($host) && strcasecmp($host, $request->getHost()) === 0;
+    }
+
+    /** A path on this site (`/checkout`) or a URL of it as a full URL; null for anything else. */
+    public static function siteUrl(Request $request, string $target): ?string
+    {
+        $target = trim($target);
+        if (str_starts_with($target, '/') && ! str_starts_with($target, '//') && preg_match('/[\\\\\x00-\x1f\x7f]/', $target) !== 1) {
+            return url($target);
+        }
+
+        return self::onThisSite($request, $target) ? $target : null;
     }
 }

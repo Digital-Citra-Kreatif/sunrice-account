@@ -6,6 +6,7 @@ namespace Sunrice\Account\Http\Controllers\Auth;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
@@ -52,9 +53,11 @@ final class VerificationController
     }
 
     /**
-     * The link from the email: verifies the address and signs the account
-     * in, in the language the link was sent in. Staff while the site shares
-     * the admin's guard, and locked accounts, are verified but not signed in.
+     * The link from the email: verifies the address and, the first time,
+     * signs the account in, in the language the link was sent in. Opened
+     * again, while someone else is signed in, for staff while the site
+     * shares the admin's guard, or for a locked account, it verifies only
+     * and sends them to sign in.
      */
     public function verify(Request $request, string $id, string $hash, VerifyEmail $verify, AccountGuard $accounts): RedirectResponse
     {
@@ -69,9 +72,15 @@ final class VerificationController
         $lang = $request->string('lang')->toString();
         $locale = Locales::has($lang) ? $lang : Locales::default();
         app()->setLocale($locale);
-        $verify->handle($user, $locale);
+        $verifiedNow = $verify->handle($user, $locale);
 
-        if (SiteGuard::refusesStaff($user) || $accounts->isLocked($user)) {
+        // It signs in only the first time, and never over someone signed in: a link opened again,
+        // or sent to someone else, isn't a way into the account (or a way to swap theirs for it).
+        $current = SiteGuard::get()->user();
+        if ($current instanceof Model && $user->is($current)) {
+            return redirect()->to(AccountRoutes::url('account.dashboard', [], $locale))->with('account.status', __('account::auth.verify.done'));
+        }
+        if (! $verifiedNow || $current !== null || SiteGuard::refusesStaff($user) || $accounts->isLocked($user)) {
             return redirect()->to(AccountRoutes::url('account.login', [], $locale))->with('account.status', __('account::auth.verify.done'));
         }
         SiteGuard::get()->login($user);

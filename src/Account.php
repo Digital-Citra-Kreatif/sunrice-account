@@ -13,6 +13,7 @@ use Spatie\Permission\Models\Role;
 use Sunrice\Account\Auth\SiteGuard;
 use Sunrice\Account\Emails\Emails;
 use Sunrice\Account\Emails\EmailSettings;
+use Sunrice\Account\Http\Controllers\Auth\Redirects;
 use Sunrice\Account\Http\Middleware\Authenticate;
 use Sunrice\Account\MyAccount\Dashboard;
 use Sunrice\Account\MyAccount\Fields;
@@ -101,14 +102,17 @@ final class Account
     }
 
     /**
-     * Send a guest to the sign-in page, and back to `$returnTo` (by
-     * default the page they asked for) once they've signed in.
+     * Send a guest to the sign-in page, and back to `$returnTo` (a path
+     * like `/checkout` or a URL of this site; by default, or for anything
+     * else, the page they asked for) once they've signed in.
      */
     public function redirectToSignIn(?string $returnTo = null): RedirectResponse
     {
         $request = request();
         if ($request->hasSession()) {
-            $request->session()->put(Authenticate::INTENDED, $returnTo ?? $request->fullUrl());
+            // Only an address on this site: a plugin passing on a visitor's ?return= can't make it an open redirect.
+            $target = $returnTo === null ? null : Redirects::siteUrl($request, $returnTo);
+            $request->session()->put(Authenticate::INTENDED, $target ?? $request->fullUrl());
         }
 
         return redirect(AccountRoutes::url('account.login'));

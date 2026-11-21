@@ -9,9 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Account\Auth\Actions\SendVerificationLink;
+use Sunrice\Account\Auth\Throttle;
 use Sunrice\Account\Auth\Users;
 use Sunrice\Account\Events\ProfileUpdated;
 use Sunrice\Account\Events\ProfileUpdating;
@@ -41,9 +41,10 @@ final class UpdateProfile
         $profile = Profile::forUser($user);
         $fields = $this->fields->profile();
         $phone = $this->settings->phone;
+        $input = [...$input, 'email' => Users::normalizeEmail(is_string($input['email'] ?? null) ? $input['email'] : '')];
         $data = Validator::make($input, [
             'name' => ['required', 'string', 'max:120'],
-            'email' => ['required', 'string', 'email', 'max:190', Rule::unique($user->getTable(), 'email')->ignore($user->getKey(), $user->getKeyName())],
+            'email' => ['required', 'string', 'email', 'max:190'],
             'phone' => $phone === 'required' ? ['required', 'string', 'max:30'] : ['nullable', 'string', 'max:30'],
             'accepts_marketing' => ['nullable', 'boolean'],
             'current_password' => ['nullable', 'string', 'max:255'],
@@ -64,8 +65,20 @@ final class UpdateProfile
         $email = Users::normalizeEmail(Input::string($values, 'email'));
         $current = $user->getAttribute('email');
         $emailChanged = $email !== Users::normalizeEmail(is_string($current) ? $current : '');
-        if ($emailChanged && $profile->password_set && ! Hash::check(Input::string($data, 'current_password'), $user->getAuthPassword())) {
-            throw ValidationException::withMessages(['current_password' => __('account::account.profile.email_needs_password')]);
+        if ($emailChanged) {
+            // The current password, then whether the address is free, each at most 5 wrong tries in 10 minutes:
+            // a stolen session can't guess the password, nor list which addresses have an account.
+            Throttle::account('profile', $user->getKey(), 'email');
+            if ($profile->password_set && ! Hash::check(Input::string($data, 'current_password'), $user->getAuthPassword())) {
+                Throttle::account('profile', $user->getKey(), 'email', hit: true);
+
+                throw ValidationException::withMessages(['current_password' => __('account::account.profile.email_needs_password')]);
+            }
+            if ($user->newQuery()->where('email', $email)->whereKeyNot($user->getKey())->exists()) {
+                Throttle::account('profile', $user->getKey(), 'email', hit: true);
+
+                throw ValidationException::withMessages(['email' => __('account::account.profile.email_unavailable')]);
+            }
         }
         $verify = $emailChanged && $this->settings->verifyEmail;
         $phoneValue = Input::nullableString($values, 'phone');
@@ -88,8 +101,10 @@ final class UpdateProfile
             }
         }
 
-        DB::transaction(function () use ($user, $profile, $name, $email, $verify, $phoneValue, $consent, $extra): void {
-            $user->forceFill(['name' => $name, 'email' => $email, ...($verify ? ['email_verified_at' => null] : [])])->save();
+        DB::transaction(function () use ($user, $profile, $name, $email, $emailChanged, $phoneValue, $consent, $extra): void {
+            // A new address isn't verified, whether or not emails must be (Google and emailed codes then
+            // treat it as unproven: see VerifyEmail::claim()).
+            $user->forceFill(['name' => $name, 'email' => $email, ...($emailChanged ? ['email_verified_at' => null] : [])])->save();
             $profile->forceFill([
                 'phone' => $phoneValue,
                 'accepts_marketing' => $consent,

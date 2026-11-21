@@ -13,6 +13,7 @@ use Sunrice\Account\Auth\Actions\SignOut;
 use Sunrice\Account\Auth\Google;
 use Sunrice\Account\Auth\LoginCodes;
 use Sunrice\Account\Auth\Throttle;
+use Sunrice\Account\Auth\Users;
 use Sunrice\Account\Settings\AccountSettings;
 use Sunrice\Account\View\Layout;
 use Sunrice\Admin\Security\Captcha;
@@ -39,6 +40,8 @@ final class LoginController
         ]);
         $email = $request->string('email')->toString();
         Throttle::check('login', $request, $email, 5, 30);
+        // And 20 wrong passwords an hour for one email from any IP, so many IPs can't guess on.
+        Throttle::account('login', Users::normalizeEmail($email), 'email', 20, 3600);
         if (! app(Captcha::class)->passes($request)) {
             Throttle::hit('login', $request, $email);
 
@@ -48,6 +51,7 @@ final class LoginController
             $authenticate->handle($email, $request->string('password')->toString(), $request->boolean('remember'));
         } catch (ValidationException $e) {
             Throttle::hit('login', $request, $email);
+            Throttle::account('login', Users::normalizeEmail($email), 'email', 20, 3600, hit: true);
 
             throw $e;
         }

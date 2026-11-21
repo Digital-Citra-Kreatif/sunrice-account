@@ -75,6 +75,15 @@ abstract class AccountEmail extends Notification implements ShouldQueue
         return is_string($text) ? $text : '';
     }
 
+    /**
+     * A visitor's text (a name, an address) as plain text in an email's
+     * Markdown: `[Approve](https://…)` stays those characters, never a link.
+     */
+    public static function plain(string $text): string
+    {
+        return (string) preg_replace('/([\\\\`*_{}\[\]()#+\-.!|<>~])/', '\\\\$1', $text);
+    }
+
     /** The site's name, as the emails show it (the panel's mail brand). */
     public static function site(): string
     {

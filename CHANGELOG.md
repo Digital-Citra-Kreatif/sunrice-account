@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- **Security fixes** (see [Keeping accounts safe](docs/index.md#keeping-accounts-safe)):
+  - An unverified account made with someone else's address is taken back when its owner proves the
+    address with an emailed code or Google: its password is cleared and its other sessions end
+    (`VerifyEmail::claim()`). Before, whoever made it kept their password. A changed profile address
+    is unverified, whether or not emails must be verified.
+  - The verification link signs in only the first time, and never over someone signed in (it could
+    be reused for 24 hours, or swap a visitor into another account).
+  - Locked accounts and "Sign out everywhere" end site sessions too (`account.auth` checks
+    `AccountGuard::sessionAllowed()`; site sign-ins set `AccountGuard::LOGIN_AT`). Changing or
+    resetting the password signs out the account's other sessions.
+  - Sign-in takes as long for an unknown email; every code-check failure reads the same; the
+    profile says an address is taken only after the current password is right.
+  - New limits: 20 wrong passwords an hour per email from any IP, 5 codes an hour per email, 5 wrong
+    current passwords in 10 minutes on the profile page.
+  - Visitors' names in staff emails can't become Markdown links (`AccountEmail::plain()`).
+  - `Account::redirectToSignIn()` takes only an address on this site (a path or a URL of it), and
+    the return address after sign-in is checked more strictly (no backslashes or user info).
 - `Account::roles($user)`: the names of an account's roles, sorted. `Account::redirectToSignIn(?string
   $returnTo = null)`: sends a guest to sign in and back to the page they asked for (or `$returnTo`)
   afterwards; for plugins with members-only pages.
