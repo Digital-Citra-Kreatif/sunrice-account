@@ -16,7 +16,7 @@ use Sunrice\Admin\Panel;
  * its switch is on (Settings → Accounts → Emails; locked ones always),
  * with its subject from the settings for that language or its default
  * text, and the site's brand. An app replaces an email's body with
- * resources/views/account/emails/{key}.blade.php (a markdown mail view;
+ * resources/views/vendor/account/emails/{key}.blade.php (a markdown mail view;
  * it gets `$lang`, `$site` and what the email passes as data).
  *
  * Plugins build their own account emails on it, after registering their
@@ -56,7 +56,7 @@ abstract class AccountEmail extends Notification implements ShouldQueue
     {
         $data = ['site' => self::site(), ...$this->data($notifiable)];
         $mail = $this->build((new MailMessage)->subject($this->subject($data)), $notifiable);
-        $replacement = 'account.emails.'.static::key();
+        $replacement = 'account::emails.'.static::key();
 
         return view()->exists($replacement)
             ? $mail->markdown($replacement, [...$data, 'lang' => $this->lang])

@@ -34,12 +34,12 @@ final class Google
             config(['services.google' => [
                 'client_id' => self::credential('client_id'),
                 'client_secret' => self::credential('client_secret'),
-                'redirect' => route('account.google.callback'),
+                'redirect' => route('sunrice.account.google.callback'),
             ]]);
         }
         $driver = Socialite::driver('google');
         if ($driver instanceof AbstractProvider) {
-            $driver->redirectUrl(route('account.google.callback'));
+            $driver->redirectUrl(route('sunrice.account.google.callback'));
         }
 
         return $driver;

@@ -10,14 +10,14 @@ use Sunrice\Account\Auth\SiteGuard;
 use Sunrice\Account\Routing\AccountRoutes;
 use Symfony\Component\HttpFoundation\Response;
 
-/** `account.guest`: pages for guests only (sign in, register…); signed-in accounts go to My Account. */
+/** `sunrice.account.guest`: pages for guests only (sign in, register…); signed-in accounts go to My Account. */
 final class RedirectIfAuthenticated
 {
     /** @param  Closure(Request): Response  $next */
     public function handle(Request $request, Closure $next): Response
     {
         if (SiteGuard::get()->check()) {
-            return redirect(AccountRoutes::url('account.dashboard'));
+            return redirect(AccountRoutes::url('sunrice.account.dashboard'));
         }
 
         return $next($request);

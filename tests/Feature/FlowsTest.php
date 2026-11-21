@@ -10,11 +10,11 @@ use Sunrice\Account\Notifications\VerifyEmailNotification;
 
 it('asks a signed-in account to verify, says where the link went, and sends it again', function () {
     Notification::fake();
-    Route::middleware(['web', 'account.auth', 'account.verified'])->get('/members', fn () => 'members');
+    Route::middleware(['web', 'sunrice.account.auth', 'sunrice.account.verified'])->get('/members', fn () => 'members');
     $user = siteUser(['email_verified_at' => null]);
     $this->actingAs($user, 'account');
 
-    $this->get('/members')->assertRedirect(Account::url('account.verification.notice'));
+    $this->get('/members')->assertRedirect(Account::url('sunrice.account.verification.notice'));
     Notification::assertSentToTimes($user, VerifyEmailNotification::class, 1);
     $this->get('/account/verify')->assertOk()->assertSee('ana@example.com')->assertSee('Kirim ulang tautan')->assertDontSee('name="email"', false);
 
@@ -24,7 +24,7 @@ it('asks a signed-in account to verify, says where the link went, and sends it a
 });
 
 it('sends a verified account from the verify page to My Account', function () {
-    $this->actingAs(siteUser(), 'account')->get('/account/verify')->assertRedirect(Account::url('account.dashboard'));
+    $this->actingAs(siteUser(), 'account')->get('/account/verify')->assertRedirect(Account::url('sunrice.account.dashboard'));
 });
 
 it('sends a new code after a minute, and says why when it\'s too soon', function () {

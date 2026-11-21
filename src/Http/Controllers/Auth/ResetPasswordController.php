@@ -27,6 +27,6 @@ final class ResetPasswordController
     {
         $reset->handle($request->only(['token', 'email', 'password', 'password_confirmation']));
 
-        return redirect()->to(AccountRoutes::url('account.login'))->with('account.status', __('account::auth.reset.done'));
+        return redirect()->to(AccountRoutes::url('sunrice.account.login'))->with('account.status', __('account::auth.reset.done'));
     }
 }

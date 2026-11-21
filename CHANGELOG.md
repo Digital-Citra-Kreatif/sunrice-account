@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- **No more clashes with the app** (breaking, before 1.0):
+  - Route names are `sunrice.account.*` (were `account.*`, which took over an app's own
+    `account.login`, `account.profile`… while its `/account/*` URLs still won): use
+    `Account::url('sunrice.account.dashboard')`. Middleware aliases are `sunrice.account.auth`,
+    `sunrice.account.guest`, `sunrice.account.verified`, `sunrice.account.noindex`.
+  - An app's copies of account views go in `resources/views/vendor/account/` (Laravel's place;
+    `vendor:publish --tag=sunrice-account-views` copies them there), emails' bodies in
+    `resources/views/vendor/account/emails/{key}.blade.php`. An app's own `resources/views/account/`
+    is no longer taken for the package's views. Move copies you made.
+  - The account pages' CSS is pushed to the layout's `head` stack, a theme's too, once
+    (`partials.push-styles`); `sunrice-account.styles` (`SUNRICE_ACCOUNT_STYLES`) turns it off for
+    a theme that styles the `account-*` classes itself.
+  - Docs: while the site shares the admin's guard, signing out of the site signs out of the admin.
 - **Sign-in flows that no longer leave people stuck**:
   - `account.verified` sent a signed-in, unverified account to a page for guests, which bounced it
     to My Account with no word. The verify page now works signed in: it sends the link, says where

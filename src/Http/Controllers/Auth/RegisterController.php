@@ -24,7 +24,7 @@ final class RegisterController
     public function show(AccountSettings $settings): View|RedirectResponse
     {
         if (! $settings->registration) {
-            return redirect()->to(AccountRoutes::url('account.login'))->with('account.status', __('account::auth.register.closed'));
+            return redirect()->to(AccountRoutes::url('sunrice.account.login'))->with('account.status', __('account::auth.register.closed'));
         }
 
         return view(Layout::view('auth.register'), [
@@ -49,14 +49,14 @@ final class RegisterController
 
         $user = $register->handle($request->only(['name', 'email', 'phone', 'password', 'password_confirmation', 'accepts_marketing', 'terms', 'fields']), app()->getLocale());
         if ($user === null) {
-            return redirect()->to(AccountRoutes::url('account.login'))->with('account.status', __('account::auth.register.check_email'));
+            return redirect()->to(AccountRoutes::url('sunrice.account.login'))->with('account.status', __('account::auth.register.check_email'));
         }
 
         if ($settings->verifyEmail) {
             // The same answer as for a taken email: the link signs the account in.
             $verification->handle($user, app()->getLocale());
 
-            return redirect()->to(AccountRoutes::url('account.login'))->with('account.status', __('account::auth.register.check_email'));
+            return redirect()->to(AccountRoutes::url('sunrice.account.login'))->with('account.status', __('account::auth.register.check_email'));
         }
         SiteGuard::get()->login($user);
         $request->session()->regenerate();

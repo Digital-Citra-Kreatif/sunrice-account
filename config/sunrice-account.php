@@ -38,7 +38,7 @@ return [
     | `layout` is the site layout account pages extend: by default the CMS's
     | site layout (resources/views/cms/layout.blade.php); when it doesn't
     | exist, the package's minimal one. An app overrides any account view by
-    | publishing it to resources/views/account/.
+    | publishing it to resources/views/vendor/account/.
     |
     */
 
@@ -52,6 +52,12 @@ return [
     ],
 
     'layout' => 'cms.layout',
+
+    /*
+    | The package's CSS for the account pages (plain, light and dark), pushed to the layout's `head`
+    | stack. Turn it off when the site's theme styles the account-* classes itself.
+    */
+    'styles' => (bool) env('SUNRICE_ACCOUNT_STYLES', true),
 
     /*
     |--------------------------------------------------------------------------

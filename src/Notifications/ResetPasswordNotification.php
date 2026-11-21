@@ -25,7 +25,7 @@ final class ResetPasswordNotification extends AccountEmail
     protected function build(MailMessage $mail, mixed $notifiable): MailMessage
     {
         $email = is_object($notifiable) && method_exists($notifiable, 'getEmailForPasswordReset') ? $notifiable->getEmailForPasswordReset() : '';
-        $url = AccountRoutes::url('account.password.reset', ['token' => $this->token, 'email' => is_string($email) ? $email : ''], $this->lang);
+        $url = AccountRoutes::url('sunrice.account.password.reset', ['token' => $this->token, 'email' => is_string($email) ? $email : ''], $this->lang);
         $broker = config('sunrice-account.auth.passwords') ?: config('auth.defaults.passwords', 'users');
         $minutes = config('auth.passwords.'.(is_string($broker) ? $broker : 'users').'.expire', 60);
 

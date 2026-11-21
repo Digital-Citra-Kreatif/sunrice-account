@@ -301,7 +301,7 @@ final class AccountSettings extends Settings
             }
         }
 
-        return Section::make('Emails')->description('What the account emails say, and who gets the staff emails. Their texts are in the translations; an app can replace an email with resources/views/account/emails/{key}.blade.php.')
+        return Section::make('Emails')->description('What the account emails say, and who gets the staff emails. Their texts are in the translations; an app can replace an email with resources/views/vendor/account/emails/{key}.blade.php.')
             ->columns(2)->schema($fields);
     }
 

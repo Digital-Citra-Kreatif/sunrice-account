@@ -56,7 +56,7 @@ it('adds other plugins\' pages under the account prefix, in every language', fun
 
 it('sends signed-in accounts away from guest-only pages', function () {
     Account::routes(function (string $suffix): void {
-        Route::get('join', fn () => 'join')->middleware('account.guest')->name('test.join'.$suffix);
+        Route::get('join', fn () => 'join')->middleware('sunrice.account.guest')->name('test.join'.$suffix);
     }, signedIn: false);
     $this->get('/account/join')->assertOk();
 
@@ -74,4 +74,12 @@ it('takes the account prefix from the settings page, else from config', function
     accountSettings(['path' => 'my-account']);
     expect(AccountRoutes::prefix())->toBe('my-account')
         ->and(AccountRoutes::path('login'))->toBe('login');
+});
+
+it('names its routes sunrice.account.*, leaving an app\'s own account.* names alone', function () {
+    Route::middleware('web')->get('/shop/my-account/login', fn () => 'the app\'s')->name('account.login');
+    app('router')->getRoutes()->refreshNameLookups();
+
+    expect(route('account.login'))->toBe('http://localhost/shop/my-account/login')
+        ->and(Account::url('sunrice.account.login', locale: 'id'))->toBe('http://localhost/account/login');
 });

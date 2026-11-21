@@ -115,7 +115,7 @@ final class Account
             $request->session()->put(Authenticate::INTENDED, $target ?? $request->fullUrl());
         }
 
-        return redirect(AccountRoutes::url('account.login'));
+        return redirect(AccountRoutes::url('sunrice.account.login'));
     }
 
     /** The profile of a user (created on first need). */
@@ -126,7 +126,7 @@ final class Account
 
     /**
      * Pages under the account prefix (/account/orders…), in every language
-     * of the site. They are for signed-in accounts (`account.auth`) unless
+     * of the site. They are for signed-in accounts (`sunrice.account.auth`) unless
      * $signedIn is false. Name them with the suffix the closure receives:
      *
      *     Account::routes(function (string $suffix) {
@@ -142,7 +142,7 @@ final class Account
 
     /**
      * An account page's URL in the current (or given) language:
-     * Account::url('account.dashboard').
+     * Account::url('sunrice.account.dashboard').
      *
      * @param  array<string, mixed>  $parameters
      */

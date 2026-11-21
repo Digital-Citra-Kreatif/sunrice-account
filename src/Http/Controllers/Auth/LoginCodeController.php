@@ -53,7 +53,7 @@ final class LoginCodeController
         $request->session()->put(self::REMEMBER, $request->boolean('remember'));
 
         // The same answer for every email.
-        return redirect()->to(AccountRoutes::url('account.code'))->with('account.status', __('account::auth.code.sent', ['email' => $email]));
+        return redirect()->to(AccountRoutes::url('sunrice.account.code'))->with('account.status', __('account::auth.code.sent', ['email' => $email]));
     }
 
     public function show(Request $request, LoginCodes $codes): View|RedirectResponse
@@ -61,7 +61,7 @@ final class LoginCodeController
         abort_unless($codes->available(), 404);
         $email = $request->session()->get(self::SESSION);
         if (! is_string($email)) {
-            return redirect()->to(AccountRoutes::url('account.login'));
+            return redirect()->to(AccountRoutes::url('sunrice.account.login'));
         }
 
         return view(Layout::view('auth.code'), [
