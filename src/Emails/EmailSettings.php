@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Account\Emails;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Sunrice\Account\Auth\Users;
@@ -81,7 +82,7 @@ final class EmailSettings
         return array_values(array_filter($stored, fn (mixed $role): bool => is_string($role) && $role !== ''));
     }
 
-    /** @return Collection<int, Model> the users with a staff email's roles */
+    /** @return Collection<int, Model&Authenticatable> the users with a staff email's roles */
     public function staff(string $key): Collection
     {
         $roles = $this->roles($key);
