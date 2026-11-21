@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Sunrice\Account\Facades;
+
+use Illuminate\Support\Facades\Facade;
+
+/**
+ * @method static \Sunrice\Account\Settings\AccountSettings settings()
+ * @method static string guard()
+ * @method static \Illuminate\Contracts\Auth\Authenticatable|null user()
+ * @method static \Sunrice\Account\Profiles\Models\Profile profile(\Illuminate\Contracts\Auth\Authenticatable $user)
+ *
+ * @see \Sunrice\Account\Account
+ *
+ * @api
+ */
+final class Account extends Facade
+{
+    protected static function getFacadeAccessor(): string
+    {
+        return \Sunrice\Account\Account::class;
+    }
+}
