@@ -26,7 +26,7 @@ use Sunrice\Admin\Auth\PasswordPolicy;
 final class ResetPassword
 {
     /**
-     * @param  array<string, mixed>  $input  token, email, password, password_confirmation
+     * @param  array<array-key, mixed>  $input  token, email, password, password_confirmation
      *
      * @throws ValidationException
      */
