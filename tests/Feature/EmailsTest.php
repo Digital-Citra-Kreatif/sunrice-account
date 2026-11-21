@@ -56,7 +56,7 @@ it('tells super admins, administrators and the set addresses of a new account, e
     $super = staffWith((string) config('sunrice-admin.super_admin_role', 'super-admin'), 'boss@example.com');
     $admin = staffWith('administrator', 'admin@example.com');
     $editor = staffWith('editor', 'editor@example.com');
-    accountSettings(['staffRegistrationAddresses' => ['office@example.com', 'Boss@example.com', 'not-an-email']]);
+    accountSettings(['staffRegistrationAddresses' => "office@example.com\nBoss@example.com\nnot-an-email"]);
 
     signUp();
 

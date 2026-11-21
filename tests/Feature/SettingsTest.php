@@ -61,7 +61,7 @@ it('saves from the settings page', function () {
     $this->actingAs(settingsAdmin(), 'web')->put('/admin/settings/accounts', [
         'registration' => false, 'verifyEmail' => true, 'defaultRoles' => ['member'], 'path' => 'members', 'phone' => 'required',
         'loginCode' => true, 'codeMinutes' => 15, 'announcementPosition' => 'below',
-        'staffRegistrationAddresses' => ['office@example.com'],
+        'staffRegistrationAddresses' => "office@example.com\nboss@example.com",
     ])->assertSessionHasNoErrors()->assertRedirect();
 
     $settings = Account::settings();
@@ -69,7 +69,8 @@ it('saves from the settings page', function () {
         ->and($settings->path)->toBe('members')
         ->and($settings->phone)->toBe('required')
         ->and($settings->codeMinutes)->toBe(15)
-        ->and($settings->staffRegistrationAddresses)->toBe(['office@example.com']);
+        ->and($settings->staffRegistrationAddresses)->toBe("office@example.com\nboss@example.com")
+        ->and(Account::emailSettings()->addresses('account_staff_registration'))->toBe(['office@example.com', 'boss@example.com']);
 });
 
 it('never gives new accounts a role that opens the admin', function () {

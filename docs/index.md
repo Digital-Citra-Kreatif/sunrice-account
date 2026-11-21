@@ -289,7 +289,7 @@ Settings → Accounts → Emails sets them up (`AccountSettings::EMAILS` names e
 - `{email}Subject`: per language, as "code: subject" lines; `:site` (or `{site}`) and the email's
   own placeholders (`{name}`…) are replaced. Without one, the default text.
 - Staff emails go to the users with `{email}Roles` (null: super admins and administrators) and
-  to `{email}Addresses`, each once.
+  to `{email}Addresses` (one per line), each once.
 
 `Account::emailSettings()` reads them for any email (`enabled($key)`, `subject($key, $locale)`,
 `addresses($key)`, `roles($key)`).

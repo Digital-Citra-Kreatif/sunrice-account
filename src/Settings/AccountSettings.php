@@ -140,8 +140,8 @@ final class AccountSettings extends Settings
 
     public string $staffRegistrationSubject = '';
 
-    /** @var list<string> */
-    public array $staffRegistrationAddresses = [];
+    /** One address per line. */
+    public string $staffRegistrationAddresses = '';
 
     /** @var list<string>|null null: super admins and administrators */
     public ?array $staffRegistrationRoles = null;
@@ -150,8 +150,8 @@ final class AccountSettings extends Settings
 
     public string $staffDeletionSubject = '';
 
-    /** @var list<string> */
-    public array $staffDeletionAddresses = [];
+    /** One address per line. */
+    public string $staffDeletionAddresses = '';
 
     /** @var list<string>|null null: super admins and administrators */
     public ?array $staffDeletionRoles = null;

@@ -11,6 +11,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Sunrice\Account\Auth\Users;
 use Sunrice\Account\Settings\AccountSettings;
+use Sunrice\Admin\Resources\Forms\ListInput;
 
 /**
  * An email's settings: for the package's emails, Settings → Accounts →
@@ -39,8 +40,8 @@ final class EmailSettings
             if (is_string($values[$prefix.'Subject'] ?? null)) {
                 $settings['subject'] = $values[$prefix.'Subject'];
             }
-            if (is_array($values[$prefix.'Addresses'] ?? null)) {
-                $settings['addresses'] = self::strings($values[$prefix.'Addresses']);
+            if (is_string($values[$prefix.'Addresses'] ?? null)) {
+                $settings['addresses'] = ListInput::items($values[$prefix.'Addresses'], emails: true);
             }
             if (array_key_exists($prefix.'Roles', $values)) {
                 $roles = $values[$prefix.'Roles'];
