@@ -24,22 +24,16 @@ it('keeps account pages out of search engines and shared caches', function () {
     expect($this->get('/account')->headers->get('Cache-Control'))->toContain('no-store')->toContain('private');
 });
 
-it('refuses guests while there is no sign-in page', function () {
-    $this->get('/account')->assertUnauthorized();
-});
-
 it('sends guests to the sign-in page, then back where they were going', function () {
-    Route::middleware('web')->get('account/login', fn () => 'sign in')->name('account.login');
-    Route::getRoutes()->refreshNameLookups();
-
     $this->get('/account?tab=1')->assertRedirect('/account/login')
         ->assertSessionHas(Authenticate::INTENDED, 'http://localhost/account?tab=1');
+    $this->get('/en/account')->assertRedirect('/en/account/login');
 });
 
 it('doesn\'t let an admin session into My Account', function () {
     $this->actingAs(siteUser(), 'web');
 
-    $this->get('/account')->assertUnauthorized();
+    $this->get('/account')->assertRedirect('/account/login');
 });
 
 it('adds other plugins\' pages under the account prefix, in every language', function () {
@@ -50,7 +44,7 @@ it('adds other plugins\' pages under the account prefix, in every language', fun
         Route::get('help', fn () => 'help for all')->name('test.help'.$suffix);
     }, signedIn: false);
 
-    $this->get('/account/orders')->assertUnauthorized();
+    $this->get('/account/orders')->assertRedirect('/account/login');
     $this->get('/account/help')->assertOk()->assertSee('help for all')->assertHeader('X-Robots-Tag', 'noindex, nofollow');
 
     $this->actingAs(siteUser(), 'account');

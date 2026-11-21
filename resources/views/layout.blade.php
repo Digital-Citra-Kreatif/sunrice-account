@@ -11,6 +11,7 @@
 @section('content')
     <section class="account">
         <div class="account__page">
+            @include(\Sunrice\Account\View\Layout::view('partials.messages'))
             @yield('account')
         </div>
     </section>

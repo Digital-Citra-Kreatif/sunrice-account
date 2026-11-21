@@ -71,6 +71,14 @@ return [
             'default_roles' => ['member'],
             // The account address prefix, when set in the settings page (null: paths.prefix).
             'path' => null,
+            // The phone number at registration: off, optional or required.
+            'phone' => 'optional',
+            // Offer a "send me news and offers" checkbox at registration.
+            'marketing_consent' => true,
+            // A terms page to agree to at registration (its URL; null: none).
+            'terms_url' => null,
+            // Where people go after signing in, a path on the site (null: My Account).
+            'redirect_after_login' => null,
         ],
     ],
 

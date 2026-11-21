@@ -52,7 +52,7 @@ sunrice-commerce's customer accounts. Commerce today has all of this built in
 2. **Routes and layout** ✅: routes in every site language (`/account`, `/en/account`), configurable
    paths, `account.auth` / `account.guest` middleware, layout lookup (`cms.layout`, then the app's
    `resources/views/account/*`, then the package's), page cache skip, `noindex`.
-3. **Sign-in flows**: login, logout, register, forgot and reset password; throttling (per email +
+3. **Sign-in flows** ✅: login, logout, register, forgot and reset password; throttling (per email +
    IP, per IP), captcha, honeypot, password policy, no account enumeration, the shared-guard staff
    check. Actions in `src/Auth/Actions`.
 4. **Email verification**: signed link, resend, re-verification when the email changes.
