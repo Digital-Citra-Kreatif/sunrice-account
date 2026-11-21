@@ -7,10 +7,9 @@ namespace Sunrice\Account\View;
 /**
  * Which views account pages use. The site layout they extend is the
  * site's (sunrice-account.layout, by default the CMS's `cms.layout`) when
- * it exists, else the package's minimal one; both take
- * @section('content') and a `seoTitle`. Any account view can be replaced
- * by the app's copy in resources/views/account/ (`account.login` for
- * `account::login`).
+ * it exists, else the package's minimal one; both take a `content`
+ * section and a `seoTitle`. Any account view can be replaced by the app's
+ * copy in resources/views/account/ (`account.login` for `account::login`).
  *
  * @api
  */
