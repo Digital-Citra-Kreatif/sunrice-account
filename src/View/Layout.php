@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sunrice\Account\View;
 
+use InvalidArgumentException;
+
 /**
  * Which views account pages use. The site layout they extend is the
  * site's (sunrice-account.layout, by default the CMS's `cms.layout`) when
@@ -24,7 +26,6 @@ final class Layout
     {
         $layout = config('sunrice-account.layout');
         if (is_string($layout) && $layout !== '' && view()->exists($layout)) {
-            /** @var view-string $layout (it exists) */
             return $layout;
         }
 
@@ -38,9 +39,15 @@ final class Layout
      */
     public static function view(string $name): string
     {
-        /** @var view-string $view (the app's when it exists; the package always has its own) */
-        $view = view()->exists("account.{$name}") ? "account.{$name}" : "account::{$name}";
+        $app = "account.{$name}";
+        if (view()->exists($app)) {
+            return $app;
+        }
+        $package = "account::{$name}";
+        if (view()->exists($package)) {
+            return $package;
+        }
 
-        return $view;
+        throw new InvalidArgumentException("There is no account view \"{$name}\".");
     }
 }
