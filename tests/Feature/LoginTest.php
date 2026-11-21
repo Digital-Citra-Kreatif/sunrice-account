@@ -5,9 +5,11 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Role;
 use Sunrice\Account\Events\SignedIn;
 use Sunrice\Account\Events\SignedOut;
+use Sunrice\Account\Facades\Account;
 use Sunrice\Account\Notifications\VerifyEmailNotification;
 use Sunrice\Admin\Actions\Permissions\SyncPermissions;
 use Sunrice\Admin\Panel;
@@ -139,4 +141,21 @@ it('takes a sign-in sent at once, as password managers send it (no honeypot timi
 
     $this->post('/account/login', ['email' => 'ana@example.com', 'password' => 'secret-pass'])->assertRedirect('/account');
     $this->assertAuthenticated('account');
+});
+
+it('sends a guest from a plugin\'s page to sign in, and back', function () {
+    Route::middleware('web')->get('/members-only', fn () => Account::redirectToSignIn());
+    siteUser();
+
+    $this->get('/members-only?page=2')->assertRedirect(Account::url('account.login'));
+    $this->post('/account/login', ['email' => 'ana@example.com', 'password' => 'secret-pass'])->assertRedirect('http://localhost/members-only?page=2');
+});
+
+it('gives an account\'s roles on the panel\'s guard, sorted', function () {
+    $user = siteUser();
+    $user->assignRole(Role::findOrCreate('premium', 'web'), Role::findOrCreate('member', 'web'));
+    Role::findOrCreate('member', 'other');
+
+    expect(Account::roles($user))->toBe(['member', 'premium'])
+        ->and(Account::roles(siteUser(['email' => 'bo@example.com'])))->toBe([]);
 });

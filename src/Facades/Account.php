@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Sunrice\Account\Emails\EmailSettings emailSettings()
  * @method static string guard()
  * @method static \Illuminate\Contracts\Auth\Authenticatable|null user()
+ * @method static list<string> roles(\Illuminate\Contracts\Auth\Authenticatable $user)
+ * @method static \Illuminate\Http\RedirectResponse redirectToSignIn(?string $returnTo = null)
  * @method static \Sunrice\Account\Profiles\Models\Profile profile(\Illuminate\Contracts\Auth\Authenticatable $user)
  * @method static void routes(\Closure(string): void $routes, bool $signedIn = true)
  * @method static void page(string $key, string|\Closure(): string $label, string $route, (\Closure(): bool)|null $visible = null, int $position = 100, ?string $icon = null)
