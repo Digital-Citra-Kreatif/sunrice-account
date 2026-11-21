@@ -17,7 +17,7 @@ final class ResetPasswordController
     public function show(Request $request, string $token): View
     {
         return view(Layout::view('auth.reset-password'), [
-            'seoTitle' => __('account::auth.reset.title'),
+            'seoTitle' => __('account::auth.reset.choose'),
             'token' => $token,
             'email' => $request->string('email')->toString(),
         ]);

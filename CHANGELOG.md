@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+- **Sign-in flows that no longer leave people stuck**:
+  - `account.verified` sent a signed-in, unverified account to a page for guests, which bounced it
+    to My Account with no word. The verify page now works signed in: it sends the link, says where
+    it went and offers "Send the link again" (and sign-out); a verified account goes to My Account.
+  - "Send a new code" waited 10 minutes instead of 1, without saying so: it's one a minute per
+    email, and the code page shows why when it's too soon. It says where the code went, and keeps
+    "Keep me signed in".
+  - An expired, used or changed verification link goes to the verify page with what happened and a
+    way to a new one, instead of a bare 403.
+  - A reset link that no longer works says so above the form, with "Ask for a new link"; the page
+    links to a new link and back to sign in, and its title matches it.
+  - The sign-in page asks for the email once: "Email me a sign-in code" is a second button of the
+    same form. "Didn't get the email to verify…" shows only while emails are verified; staff told
+    to use the admin's sign-in get a link to it.
+  - The profile's two forms keep their errors apart (the password form uses the `password` error
+    bag); unticked checkboxes stay unticked after an error; messages name fields in the page's
+    language ("Nama wajib diisi").
+  - A new account goes where it was going (a checkout), or to the "after signing in" page.
+  - /register while registration is off goes to sign-in with a message instead of a 404.
 - **Security fixes** (see [Keeping accounts safe](docs/index.md#keeping-accounts-safe)):
   - An unverified account made with someone else's address is taken back when its owner proves the
     address with an emailed code or Google: its password is cleared and its other sessions end

@@ -138,7 +138,7 @@ same languages, and the middleware:
 | `account.auth` | Signed-in accounts only. Guests go to the sign-in page (`account.login`) and come back |
 | `account.guest` | Guests only (sign in, register); signed-in accounts go to My Account |
 | `account.noindex` | `X-Robots-Tag: noindex`, `Cache-Control: private, no-store`, and the layout's robots tag |
-| `account.verified` | After `account.auth`: a verified email while verification is required; others are asked to verify first |
+| `account.verified` | After `account.auth`: a verified email while verification is required; others are sent a link and the verify page, which says where it went and can send it again |
 
 To send a guest to sign in from a page of your own (a members-only page), return
 `Account::redirectToSignIn()`: once signed in they come back to the page they asked for (or to the
@@ -242,7 +242,9 @@ with a signed link (`account.verify`, valid for `auth.verification.expire` minut
 default), and the visitor sees "check your email", as for an email that already has an account.
 The link verifies the address, signs the account in and opens My Account in the language it was
 sent in. Signing in with an unverified email is refused and sends a new link (at most once a
-minute); `/account/verify` (`account.verification.notice`) asks for one.
+minute); `/account/verify` (`account.verification.notice`) asks for one: a guest enters their email, a
+signed-in account still to verify sees where the link went and can send it again. An expired or
+used link leads there too, saying so.
 
 An email is verified when the user's `email_verified_at` is set: by its link, by a password reset
 (the reset link proves the address too), or by staff. Changing the email invalidates the old links.

@@ -13,6 +13,7 @@ use Illuminate\Validation\ValidationException;
 use Sunrice\Account\Auth\Throttle;
 use Sunrice\Account\Events\PasswordChanged;
 use Sunrice\Account\Profiles\Models\Profile;
+use Sunrice\Account\Support\FieldNames;
 use Sunrice\Account\Support\Input;
 use Sunrice\Admin\Auth\PasswordPolicy;
 use Sunrice\Admin\Security\AccountGuard;
@@ -35,7 +36,7 @@ final class ChangePassword
         $data = Validator::make($input, [
             'current_password' => [$profile->password_set ? 'required' : 'nullable', 'string', 'max:255'],
             'password' => ['required', 'string', 'max:255', 'confirmed', ...PasswordPolicy::rules($user)],
-        ])->validate();
+        ], [], FieldNames::all(newPassword: true))->validate();
         Throttle::account('password', $user->getKey(), 'current_password');
         if ($profile->password_set && ! Hash::check(Input::string($data, 'current_password'), $user->getAuthPassword())) {
             Throttle::account('password', $user->getKey(), 'current_password', hit: true);

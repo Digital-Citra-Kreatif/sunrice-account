@@ -12,10 +12,12 @@ use Sunrice\Account\Auth\Actions\AuthenticateAccount;
 use Sunrice\Account\Auth\Actions\SignOut;
 use Sunrice\Account\Auth\Google;
 use Sunrice\Account\Auth\LoginCodes;
+use Sunrice\Account\Auth\SiteGuard;
 use Sunrice\Account\Auth\Throttle;
 use Sunrice\Account\Auth\Users;
 use Sunrice\Account\Settings\AccountSettings;
 use Sunrice\Account\View\Layout;
+use Sunrice\Admin\Panel;
 use Sunrice\Admin\Security\Captcha;
 
 /** Signing in with a password, and signing out. */
@@ -29,6 +31,9 @@ final class LoginController
             'registration' => app(AccountSettings::class)->registration,
             'codes' => app(LoginCodes::class)->available(),
             'google' => Google::available(),
+            'verifyEmail' => app(AccountSettings::class)->verifyEmail,
+            // For staff told to use the admin's sign-in, while the site shares its guard.
+            'adminLogin' => SiteGuard::sharesPanelGuard() ? url(app(Panel::class)->getPath().'/login') : null,
         ]);
     }
 

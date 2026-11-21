@@ -74,8 +74,10 @@ it('changes the password with the current one', function () {
     Event::fake([PasswordChanged::class]);
     $token = $this->user->remember_token;
 
-    $this->put('/account/profile/password', ['current_password' => 'wrong', 'password' => NEW_PASS, 'password_confirmation' => NEW_PASS])->assertSessionHasErrors('current_password');
-    $this->put('/account/profile/password', ['current_password' => 'secret-pass', 'password' => 'weak', 'password_confirmation' => 'weak'])->assertSessionHasErrors('password');
+    $this->put('/account/profile/password', ['current_password' => 'wrong', 'password' => NEW_PASS, 'password_confirmation' => NEW_PASS])->assertSessionHasErrors('current_password', errorBag: 'password');
+    // Shown under the password form only: the profile form above has a current password too.
+    $this->get('/account/profile')->assertSee('Ini bukan kata sandi Anda saat ini.');
+    $this->put('/account/profile/password', ['current_password' => 'secret-pass', 'password' => 'weak', 'password_confirmation' => 'weak'])->assertSessionHasErrors('password', errorBag: 'password');
     $this->put('/account/profile/password', ['current_password' => 'secret-pass', 'password' => NEW_PASS, 'password_confirmation' => NEW_PASS])->assertSessionHas('account.status');
 
     $user = $this->user->fresh();

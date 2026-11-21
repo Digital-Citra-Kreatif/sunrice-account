@@ -21,9 +21,11 @@ use Sunrice\Admin\Security\Captcha;
 /** The registration form (while Settings → Accounts lets visitors register). */
 final class RegisterController
 {
-    public function show(AccountSettings $settings): View
+    public function show(AccountSettings $settings): View|RedirectResponse
     {
-        abort_unless($settings->registration, 404);
+        if (! $settings->registration) {
+            return redirect()->to(AccountRoutes::url('account.login'))->with('account.status', __('account::auth.register.closed'));
+        }
 
         return view(Layout::view('auth.register'), [
             'seoTitle' => __('account::auth.register.title'),
@@ -60,6 +62,7 @@ final class RegisterController
         $request->session()->regenerate();
         event(new SignedIn($user, 'registration'));
 
-        return redirect()->to(AccountRoutes::url('account.dashboard'))->with('account.status', __('account::auth.register.welcome'));
+        // Where they were going (a checkout), else the "after signing in" page, else My Account.
+        return redirect()->to(Redirects::afterSignIn($request))->with('account.status', __('account::auth.register.welcome'));
     }
 }

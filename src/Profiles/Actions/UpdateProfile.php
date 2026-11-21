@@ -18,6 +18,7 @@ use Sunrice\Account\Events\ProfileUpdating;
 use Sunrice\Account\MyAccount\Fields;
 use Sunrice\Account\Profiles\Models\Profile;
 use Sunrice\Account\Settings\AccountSettings;
+use Sunrice\Account\Support\FieldNames;
 use Sunrice\Account\Support\Input;
 
 /**
@@ -49,7 +50,7 @@ final class UpdateProfile
             'accepts_marketing' => ['nullable', 'boolean'],
             'current_password' => ['nullable', 'string', 'max:255'],
             ...Fields::rules($fields),
-        ])->validate();
+        ], [], FieldNames::all($fields))->validate();
 
         $event = new ProfileUpdating($user, [
             'name' => Input::string($data, 'name'),

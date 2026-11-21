@@ -27,11 +27,12 @@ final class Throttle
         }
     }
 
-    public static function hit(string $name, Request $request, string $email, int $decaySeconds = 60): void
+    /** `$ipDecaySeconds`: how long the IP's count lasts, when not as long as the email's. */
+    public static function hit(string $name, Request $request, string $email, int $decaySeconds = 60, ?int $ipDecaySeconds = null): void
     {
-        foreach (self::keys($name, $request, $email) as $key) {
-            RateLimiter::hit($key, $decaySeconds);
-        }
+        [$perEmail, $perIp] = self::keys($name, $request, $email);
+        RateLimiter::hit($perEmail, $decaySeconds);
+        RateLimiter::hit($perIp, $ipDecaySeconds ?? $decaySeconds);
     }
 
     /**

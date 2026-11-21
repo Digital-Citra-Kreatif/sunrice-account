@@ -1,7 +1,9 @@
 {{-- Fields plugins add (Account::registrationFields(), profileFields()). $fields; $values: the current values by key. --}}
+{{-- After an error, what was sent (a checkbox left unticked isn't sent at all); else the saved values. --}}
+@php($submitted = session()->getOldInput('name') !== null || session()->getOldInput('email') !== null)
 @foreach ($fields as $field)
     @php($name = 'fields['.$field['key'].']')
-    @php($value = old('fields.'.$field['key'], $values[$field['key']] ?? null))
+    @php($value = $submitted ? old('fields.'.$field['key']) : ($values[$field['key']] ?? null))
     @if ($field['type'] === 'checkbox')
         <label class="account-check"><input type="checkbox" name="{{ $name }}" value="1" @checked((bool) $value)> {{ $field['label'] }}</label>
     @else
