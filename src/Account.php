@@ -7,6 +7,8 @@ namespace Sunrice\Account;
 use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Sunrice\Account\Auth\SiteGuard;
+use Sunrice\Account\Emails\Emails;
+use Sunrice\Account\Emails\EmailSettings;
 use Sunrice\Account\Profiles\Models\Profile;
 use Sunrice\Account\Routing\AccountRoutes;
 use Sunrice\Account\Settings\AccountSettings;
@@ -23,6 +25,18 @@ final class Account
     public function settings(): AccountSettings
     {
         return app(AccountSettings::class);
+    }
+
+    /** The account emails: the package's and plugins' (`->register(new EmailDefinition(...))`). */
+    public function emails(): Emails
+    {
+        return app(Emails::class);
+    }
+
+    /** An email's settings: whether it's on, its subjects, its staff recipients. */
+    public function emailSettings(): EmailSettings
+    {
+        return app(EmailSettings::class);
     }
 
     /** The name of the site's session guard. */

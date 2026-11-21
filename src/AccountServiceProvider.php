@@ -5,10 +5,16 @@ declare(strict_types=1);
 namespace Sunrice\Account;
 
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Event;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Sunrice\Account\Auth\SiteGuard;
+use Sunrice\Account\Emails\Emails;
+use Sunrice\Account\Events\Registered;
+use Sunrice\Account\Events\Verified;
 use Sunrice\Account\Http\Middleware;
+use Sunrice\Account\Listeners\NotifyStaffOfRegistration;
+use Sunrice\Account\Listeners\SendWelcomeEmail;
 use Sunrice\Account\Routing\AccountRoutes;
 use Sunrice\Account\Settings\AccountSettings;
 use Sunrice\Account\Site\AccountPageCache;
@@ -38,6 +44,7 @@ final class AccountServiceProvider extends PackageServiceProvider
 
         $this->app->singleton(Account::class);
         $this->app->singleton(AccountRoutes::class);
+        $this->app->singleton(Emails::class);
         // Read once per request (and per queued job).
         $this->app->scoped(AccountSettings::class);
 
@@ -69,5 +76,8 @@ final class AccountServiceProvider extends PackageServiceProvider
         });
 
         AccountPageCache::register();
+
+        Event::listen([Registered::class, Verified::class], SendWelcomeEmail::class);
+        Event::listen(Registered::class, NotifyStaffOfRegistration::class);
     }
 }

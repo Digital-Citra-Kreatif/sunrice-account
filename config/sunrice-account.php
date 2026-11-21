@@ -80,6 +80,9 @@ return [
             // Where people go after signing in, a path on the site (null: My Account).
             'redirect_after_login' => null,
         ],
+        // Per email key (Account::emails()): enabled, subject (per language), and for staff
+        // emails addresses and roles (default: super admins and administrators).
+        'emails' => [],
     ],
 
 ];

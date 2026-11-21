@@ -56,7 +56,7 @@ sunrice-commerce's customer accounts. Commerce today has all of this built in
    IP, per IP), captcha, honeypot, password policy, no account enumeration, the shared-guard staff
    check. Actions in `src/Auth/Actions`.
 4. **Email verification** ✅: signed link, resend, re-verification when the email changes.
-5. **Emails**: registry, on/off switches (verify and reset can't be switched off), staff
+5. **Emails** ✅: registry, on/off switches (verify and reset can't be switched off), staff
    recipients by address and role, subject per language, publishable templates with the panel's
    mail brand, queued. Welcome, verify, reset, and to staff: new registration and deletion request.
 6. **Sign in with a code and with Google**: moved from commerce, optional, off by default.
