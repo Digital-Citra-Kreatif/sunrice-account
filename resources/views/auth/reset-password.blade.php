@@ -5,6 +5,11 @@
     <section class="account-auth">
         <h1 class="account-auth__title">{{ __('account::auth.reset.choose') }}</h1>
         @include(\Sunrice\Account\View\Layout::view('partials.messages'))
+        {{-- The link no longer works (expired, used, or for another email): above the form, with a way to a new one. --}}
+        @error('token')
+            <p class="account-message account-message--error" role="alert">{{ $message }}
+                <a href="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.password.request') }}">{{ __('account::auth.reset.new_link') }}</a></p>
+        @enderror
         <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.password.update') }}" class="account-form">
             @csrf
             <input type="hidden" name="token" value="{{ $token }}">
@@ -21,5 +26,9 @@
             </label>
             <button type="submit" class="account-button account-button--primary">{{ __('account::auth.reset.submit') }}</button>
         </form>
+        <p class="account-auth__alt">
+            <a href="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.password.request') }}">{{ __('account::auth.reset.new_link') }}</a>
+            · <a href="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.login') }}">{{ __('account::auth.reset.back') }}</a>
+        </p>
     </section>
 @endsection

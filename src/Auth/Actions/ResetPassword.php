@@ -15,6 +15,7 @@ use Sunrice\Account\Auth\Passwords;
 use Sunrice\Account\Auth\Users;
 use Sunrice\Account\Events\PasswordReset;
 use Sunrice\Account\Profiles\Models\Profile;
+use Sunrice\Account\Support\FieldNames;
 use Sunrice\Account\Support\Input;
 use Sunrice\Admin\Auth\PasswordPolicy;
 use Sunrice\Admin\Security\AccountGuard;
@@ -37,7 +38,7 @@ final class ResetPassword
             'token' => ['required', 'string'],
             'email' => ['required', 'string', 'email', 'max:190'],
             'password' => ['required', 'string', 'max:255', 'confirmed', ...PasswordPolicy::rules()],
-        ])->validate();
+        ], [], FieldNames::all(newPassword: true))->validate();
 
         $status = Passwords::broker()->reset(
             ['email' => Users::normalizeEmail(Input::string($data, 'email')), 'token' => Input::string($data, 'token'), 'password' => Input::string($data, 'password')],
@@ -58,7 +59,7 @@ final class ResetPassword
         );
 
         if ($status !== Password::PASSWORD_RESET) {
-            throw ValidationException::withMessages(['email' => __('account::auth.reset.invalid')]);
+            throw ValidationException::withMessages(['token' => __('account::auth.reset.invalid')]);
         }
     }
 }

@@ -9,6 +9,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Sunrice\Account\Auth\SiteGuard;
 use Sunrice\Account\MyAccount\Fields;
 use Sunrice\Account\Profiles\Actions\ChangePassword;
@@ -46,7 +47,12 @@ final class ProfileController
 
     public function password(Request $request, ChangePassword $change): RedirectResponse
     {
-        $change->handle($this->user(), $request->only(['current_password', 'password', 'password_confirmation']));
+        try {
+            $change->handle($this->user(), $request->only(['current_password', 'password', 'password_confirmation']));
+        } catch (ValidationException $e) {
+            // Its own errors: the profile form above has a current password field too.
+            throw $e->errorBag('password');
+        }
         $request->session()->regenerate();
 
         return back()->with('account.status', __('account::account.password.saved'));

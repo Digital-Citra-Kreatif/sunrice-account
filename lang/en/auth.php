@@ -24,10 +24,12 @@ return [
         'register' => 'Create one',
         'failed' => 'These details don\'t match an account.',
         'signed_out' => 'You were signed out. Please sign in again.',
+        'admin' => 'Go to the admin\'s sign-in',
         'staff' => 'This account opens the admin: sign in on the admin\'s sign-in page.',
     ],
     'logout' => 'Sign out',
     'register' => [
+        'closed' => 'New accounts can\'t be created here at the moment.',
         'title' => 'Create an account',
         'marketing' => 'Send me news and offers by email',
         'terms' => 'I agree to the :link',
@@ -54,7 +56,8 @@ return [
         'choose' => 'Choose a new password',
         'submit' => 'Save the password',
         'done' => 'Your password is changed. Sign in with it.',
-        'invalid' => 'This link is invalid or has expired. Ask for a new one.',
+        'invalid' => 'This link no longer works: it has expired, was already used, or is for another email.',
+        'new_link' => 'Ask for a new link',
         'mail' => [
             'subject' => 'Choose a new password for :site',
             'intro' => 'You asked to choose a new password for your account.',
@@ -70,6 +73,9 @@ return [
         'sent' => 'If this email has an account waiting to be verified, a new link is on its way.',
         'required' => 'Verify your email address first: we\'ve sent you a link.',
         'done' => 'Your email address is verified.',
+        'pending' => 'We\'ve sent a link to :email. Open it to verify your address, then come back.',
+        'resend' => 'Send the link again',
+        'invalid' => 'This link has expired or was already used. Ask for a new one below.',
         'mail' => [
             'subject' => 'Verify your email address for :site',
             'intro' => 'Click the button below to verify your email address and open your account.',
@@ -79,6 +85,7 @@ return [
     ],
     'code' => [
         'title' => 'Enter your sign-in code',
+        'where' => 'The code went to :email, if it has an account.',
         'label' => 'Code',
         'submit' => 'Sign in',
         'resend' => 'Send a new code',

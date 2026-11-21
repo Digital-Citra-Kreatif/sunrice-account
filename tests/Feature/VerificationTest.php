@@ -45,10 +45,11 @@ it('refuses a link that was changed, expired or sent to another email', function
     $user = siteUser(['email_verified_at' => null]);
     $url = Verification::url($user, 'id');
 
-    $this->get($url.'x')->assertForbidden();
-    $this->get(URL::temporarySignedRoute('account.verify', now()->subMinute(), ['id' => $user->id, 'hash' => Verification::hash($user), 'lang' => 'id']))->assertForbidden();
+    // Each goes to the page asking for a new link, with why.
+    $this->get($url.'x')->assertRedirect('http://localhost/account/verify')->assertSessionHas('account.error');
+    $this->get(URL::temporarySignedRoute('account.verify', now()->subMinute(), ['id' => $user->id, 'hash' => Verification::hash($user), 'lang' => 'id']))->assertRedirect('http://localhost/account/verify');
     $user->forceFill(['email' => 'new@example.com'])->save();
-    $this->get($url)->assertForbidden();
+    $this->get($url)->assertRedirect('http://localhost/account/verify');
 
     expect($user->fresh()->email_verified_at)->toBeNull();
     $this->assertGuest('account');

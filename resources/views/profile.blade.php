@@ -34,7 +34,7 @@
             </label>
         @endif
         @if ($marketing)
-            <label class="account-check"><input type="checkbox" name="accepts_marketing" value="1" @checked(old('accepts_marketing', $profile->accepts_marketing))> {{ __('account::auth.register.marketing') }}</label>
+            <label class="account-check"><input type="checkbox" name="accepts_marketing" value="1" @checked(session()->getOldInput('email') !== null ? (bool) old('accepts_marketing') : $profile->accepts_marketing)> {{ __('account::auth.register.marketing') }}</label>
         @endif
         @include(\Sunrice\Account\View\Layout::view('partials.fields'), ['fields' => $fields, 'values' => $profile->meta ?? []])
         <button type="submit" class="account-button account-button--primary">{{ __('account::account.profile.save') }}</button>
@@ -46,12 +46,12 @@
         @if ($profile->password_set)
             <label class="account-field"><span>{{ __('account::account.profile.current_password') }}</span>
                 <input type="password" name="current_password" required autocomplete="current-password">
-                @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'current_password'])
+                @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'current_password', 'bag' => 'password'])
             </label>
         @endif
         <label class="account-field"><span>{{ __('account::auth.fields.new_password') }}</span>
             <input type="password" name="password" required autocomplete="new-password">
-            @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'password'])
+            @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'password', 'bag' => 'password'])
         </label>
         <label class="account-field"><span>{{ __('account::auth.fields.password_confirmation') }}</span>
             <input type="password" name="password_confirmation" required autocomplete="new-password">

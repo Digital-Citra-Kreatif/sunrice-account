@@ -100,7 +100,7 @@ it('lets listeners change the registration or refuse it', function () {
 it('is closed when registration is off', function () {
     accountSettings(['registration' => false]);
 
-    $this->get('/account/register')->assertNotFound();
+    $this->get('/account/register')->assertRedirect('http://localhost/account/login')->assertSessionHas('account.status');
     $this->post('/account/register', registration())->assertNotFound();
     $this->get('/account/login')->assertDontSee('/account/register');
 });

@@ -6,6 +6,7 @@ namespace Sunrice\Account\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Sunrice\Account\Auth\Actions\SendVerificationLink;
 use Sunrice\Account\Auth\SiteGuard;
 use Sunrice\Account\Auth\Verification;
 use Sunrice\Account\Routing\AccountRoutes;
@@ -29,6 +30,9 @@ final class EnsureEmailVerified
         if ($request->expectsJson()) {
             abort(403);
         }
+
+        // A link (at most one a minute), and the page saying where it went, with "Send it again".
+        app(SendVerificationLink::class)->handle($user, app()->getLocale());
 
         return redirect()->to(AccountRoutes::url('account.verification.notice'))->with('account.status', __('account::auth.verify.required'));
     }

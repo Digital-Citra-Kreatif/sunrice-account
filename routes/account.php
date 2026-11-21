@@ -33,8 +33,6 @@ Route::middleware(RedirectIfAuthenticated::class)->group(function () use ($suffi
     $register = AccountRoutes::path('register');
     $forgot = AccountRoutes::path('forgot_password');
     $reset = AccountRoutes::path('reset_password');
-    $verify = AccountRoutes::path('verify');
-
     Route::get($login, [Auth\LoginController::class, 'show'])->name('account.login'.$suffix);
     Route::post($login, [Auth\LoginController::class, 'store'])->name('account.login.attempt'.$suffix);
     Route::get($register, [Auth\RegisterController::class, 'show'])->name('account.register'.$suffix);
@@ -43,10 +41,14 @@ Route::middleware(RedirectIfAuthenticated::class)->group(function () use ($suffi
     Route::post($forgot, [Auth\ForgotPasswordController::class, 'store'])->middleware(ProtectAgainstSpam::class)->name('account.password.email'.$suffix);
     Route::get($reset.'/{token}', [Auth\ResetPasswordController::class, 'show'])->name('account.password.reset'.$suffix);
     Route::post($reset, [Auth\ResetPasswordController::class, 'store'])->name('account.password.update'.$suffix);
-    Route::post($login.'/code', [Auth\LoginCodeController::class, 'send'])->middleware(ProtectAgainstSpam::class)->name('account.code.send'.$suffix);
+    // No honeypot: it's sent from the sign-in form (which a password manager may fill and send at once); throttled and behind the captcha.
+    Route::post($login.'/code', [Auth\LoginCodeController::class, 'send'])->name('account.code.send'.$suffix);
     Route::get($login.'/code', [Auth\LoginCodeController::class, 'show'])->name('account.code'.$suffix);
     Route::post($login.'/code/check', [Auth\LoginCodeController::class, 'consume'])->name('account.code.consume'.$suffix);
     Route::get($login.'/google', [Auth\GoogleController::class, 'redirect'])->name('account.google'.$suffix);
-    Route::get($verify, [Auth\VerificationController::class, 'show'])->name('account.verification.notice'.$suffix);
-    Route::post($verify, [Auth\VerificationController::class, 'send'])->middleware(ProtectAgainstSpam::class)->name('account.verification.send'.$suffix);
 });
+
+// For guests (enter the email) and for a signed-in account still to verify its own (the link goes to it).
+$verify = AccountRoutes::path('verify');
+Route::get($verify, [Auth\VerificationController::class, 'show'])->name('account.verification.notice'.$suffix);
+Route::post($verify, [Auth\VerificationController::class, 'send'])->middleware(ProtectAgainstSpam::class)->name('account.verification.send'.$suffix);

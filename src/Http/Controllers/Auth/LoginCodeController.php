@@ -27,6 +27,9 @@ final class LoginCodeController
 {
     private const SESSION = 'account.code_email';
 
+    /** Whether "Keep me signed in" was ticked when the code was asked for. */
+    private const REMEMBER = 'account.code_remember';
+
     public function send(Request $request, LoginCodes $codes): RedirectResponse
     {
         abort_unless($codes->available(), 404);
@@ -36,10 +39,10 @@ final class LoginCodeController
         Throttle::check('code', $request, $email, 1, 10);
         // And 5 an hour for one email from any IP: nobody can flood an inbox, or keep replacing its code.
         Throttle::account('code-mail', $email, 'email', 5, 3600);
-        Throttle::hit('code', $request, $email, 600);
+        Throttle::hit('code', $request, $email, 60, 600);
         Throttle::account('code-mail', $email, 'email', 5, 3600, hit: true);
         if (! app(Captcha::class)->passes($request)) {
-            return back()->withInput($request->only('email'))->withErrors(['captcha' => __('account::auth.captcha')]);
+            return back()->withInput($request->only('email', 'remember'))->withErrors(['captcha' => __('account::auth.captcha')]);
         }
 
         $user = Users::findByEmail($email);
@@ -47,6 +50,7 @@ final class LoginCodeController
             $codes->send($user, $request, app()->getLocale());
         }
         $request->session()->put(self::SESSION, $email);
+        $request->session()->put(self::REMEMBER, $request->boolean('remember'));
 
         // The same answer for every email.
         return redirect()->to(AccountRoutes::url('account.code'))->with('account.status', __('account::auth.code.sent', ['email' => $email]));
@@ -60,7 +64,11 @@ final class LoginCodeController
             return redirect()->to(AccountRoutes::url('account.login'));
         }
 
-        return view(Layout::view('auth.code'), ['email' => $email, 'seoTitle' => __('account::auth.code.title')]);
+        return view(Layout::view('auth.code'), [
+            'email' => $email,
+            'remember' => (bool) $request->session()->get(self::REMEMBER, false),
+            'seoTitle' => __('account::auth.code.title'),
+        ]);
     }
 
     public function consume(Request $request, LoginCodes $codes, VerifyEmail $verify, AccountGuard $accounts): RedirectResponse
@@ -85,7 +93,7 @@ final class LoginCodeController
         $verify->claim($user, app()->getLocale());
         $remember = $request->boolean('remember');
         SiteGuard::get()->login($user, $remember);
-        $request->session()->forget(self::SESSION);
+        $request->session()->forget([self::SESSION, self::REMEMBER]);
         $request->session()->regenerate();
         event(new SignedIn($user, 'code', $remember));
 

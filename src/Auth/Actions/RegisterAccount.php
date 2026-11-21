@@ -17,6 +17,7 @@ use Sunrice\Account\MyAccount\Fields;
 use Sunrice\Account\Notifications\ExistingAccountNotification;
 use Sunrice\Account\Profiles\Models\Profile;
 use Sunrice\Account\Settings\AccountSettings;
+use Sunrice\Account\Support\FieldNames;
 use Sunrice\Account\Support\Input;
 use Sunrice\Admin\Auth\PasswordPolicy;
 
@@ -38,9 +39,7 @@ final class RegisterAccount
     public function handle(array $input, string $locale): ?Authenticatable
     {
         $fields = $this->fields->registration();
-        $data = Validator::make($input, [...$this->rules(), ...Fields::rules($fields)], [], [
-            'terms' => __('account::auth.register.terms_name'),
-        ])->validate();
+        $data = Validator::make($input, [...$this->rules(), ...Fields::rules($fields)], [], FieldNames::all($fields))->validate();
 
         $event = new Registering([
             'name' => Input::string($data, 'name'),

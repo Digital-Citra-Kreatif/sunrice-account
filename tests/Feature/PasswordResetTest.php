@@ -50,7 +50,7 @@ it('refuses an invalid link and a weak password', function () {
     $token = Password::broker()->createToken($user);
 
     $this->post('/account/reset-password', ['token' => 'wrong', 'email' => 'ana@example.com', 'password' => NEW_PASSWORD, 'password_confirmation' => NEW_PASSWORD])
-        ->assertSessionHasErrors('email');
+        ->assertSessionHasErrors('token');
     $this->post('/account/reset-password', ['token' => $token, 'email' => 'ana@example.com', 'password' => 'weak', 'password_confirmation' => 'weak'])
         ->assertSessionHasErrors('password');
 

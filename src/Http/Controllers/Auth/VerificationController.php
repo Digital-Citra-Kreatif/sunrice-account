@@ -26,17 +26,34 @@ use Sunrice\Cms\Support\Locales;
 /** Email verification: the link, and asking for a new one. */
 final class VerificationController
 {
-    public function show(): View
+    /**
+     * Ask for a new link: a guest enters their email; a signed-in account
+     * still to verify its own sees where the link went and can send it
+     * again (a verified one goes to My Account).
+     */
+    public function show(): View|RedirectResponse
     {
+        $user = SiteGuard::get()->user();
+        if ($user !== null && Verification::verified($user)) {
+            return redirect()->to(AccountRoutes::url('account.dashboard'));
+        }
+        $email = $user?->getAttribute('email');
+
         return view(Layout::view('auth.verify'), [
             'seoTitle' => __('account::auth.verify.title'),
             'captcha' => app(Captcha::class)->widget(app()->getLocale()),
+            // Signed in: the address the link goes to.
+            'email' => is_string($email) ? $email : null,
         ]);
     }
 
     /** Sends a new link to an unverified account; the answer is the same for any email. */
     public function send(Request $request, SendVerificationLink $send): RedirectResponse
     {
+        $own = SiteGuard::get()->user()?->getAttribute('email');
+        if (is_string($own)) {
+            $request->merge(['email' => $own]);
+        }
         $request->validate(['email' => ['required', 'string', 'email', 'max:190']]);
         $email = $request->string('email')->toString();
         Throttle::check('verify', $request, $email, 3, 10);
@@ -61,17 +78,15 @@ final class VerificationController
      */
     public function verify(Request $request, string $id, string $hash, VerifyEmail $verify, AccountGuard $accounts): RedirectResponse
     {
-        if (! URL::hasValidSignature($request)) {
-            abort(403);
-        }
-        $user = Users::model()::query()->find($id);
-        if (! $user instanceof Authenticatable || ! hash_equals(Verification::hash($user), $hash)) {
-            abort(403);
-        }
-
         $lang = $request->string('lang')->toString();
         $locale = Locales::has($lang) ? $lang : Locales::default();
         app()->setLocale($locale);
+        $user = URL::hasValidSignature($request) ? Users::model()::query()->find($id) : null;
+        if (! $user instanceof Authenticatable || ! hash_equals(Verification::hash($user), $hash)) {
+            // Expired, changed, or for an address the account no longer has: ask for a new one.
+            return redirect()->to(AccountRoutes::url('account.verification.notice', [], $locale))->with('account.error', __('account::auth.verify.invalid'));
+        }
+
         $verifiedNow = $verify->handle($user, $locale);
 
         // It signs in only the first time, and never over someone signed in: a link opened again,

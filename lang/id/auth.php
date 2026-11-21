@@ -24,10 +24,12 @@ return [
         'register' => 'Buat akun',
         'failed' => 'Data ini tidak cocok dengan akun mana pun.',
         'signed_out' => 'Anda telah dikeluarkan. Silakan masuk lagi.',
+        'admin' => 'Ke halaman masuk admin',
         'staff' => 'Akun ini membuka admin: masuklah lewat halaman masuk admin.',
     ],
     'logout' => 'Keluar',
     'register' => [
+        'closed' => 'Saat ini akun baru tidak dapat dibuat di sini.',
         'title' => 'Buat akun',
         'marketing' => 'Kirimi saya kabar dan penawaran lewat email',
         'terms' => 'Saya menyetujui :link',
@@ -54,7 +56,8 @@ return [
         'choose' => 'Pilih kata sandi baru',
         'submit' => 'Simpan kata sandi',
         'done' => 'Kata sandi Anda sudah diganti. Masuklah dengannya.',
-        'invalid' => 'Tautan ini tidak valid atau sudah kedaluwarsa. Minta tautan baru.',
+        'invalid' => 'Tautan ini tidak berlaku lagi: sudah kedaluwarsa, sudah dipakai, atau untuk email lain.',
+        'new_link' => 'Minta tautan baru',
         'mail' => [
             'subject' => 'Pilih kata sandi baru untuk :site',
             'intro' => 'Anda meminta untuk memilih kata sandi baru untuk akun Anda.',
@@ -70,6 +73,9 @@ return [
         'sent' => 'Jika email ini memiliki akun yang menunggu verifikasi, tautan baru sedang dikirim.',
         'required' => 'Verifikasi alamat email Anda dulu: kami sudah mengirimkan tautannya.',
         'done' => 'Alamat email Anda sudah terverifikasi.',
+        'pending' => 'Kami telah mengirim tautan ke :email. Buka tautan itu untuk memverifikasi alamat Anda, lalu kembali ke sini.',
+        'resend' => 'Kirim ulang tautan',
+        'invalid' => 'Tautan ini sudah kedaluwarsa atau sudah dipakai. Minta tautan baru di bawah.',
         'mail' => [
             'subject' => 'Verifikasi alamat email Anda untuk :site',
             'intro' => 'Klik tombol di bawah untuk memverifikasi alamat email Anda dan membuka akun Anda.',
@@ -79,6 +85,7 @@ return [
     ],
     'code' => [
         'title' => 'Masukkan kode masuk Anda',
+        'where' => 'Kode dikirim ke :email, jika email itu memiliki akun.',
         'label' => 'Kode',
         'submit' => 'Masuk',
         'resend' => 'Kirim kode baru',
