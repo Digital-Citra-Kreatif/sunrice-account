@@ -30,3 +30,21 @@ it('uses the app\'s copies of account views and its site layout', function () {
         (new Filesystem)->deleteDirectory($dir);
     }
 });
+
+it('styles the account pages in its own layout, with the site\'s nonce', function () {
+    $this->get('/account/login')->assertOk()->assertSee('<style nonce=', false)->assertSee('.account-auth', false);
+});
+
+it('leaves the styles to the site\'s own layout', function () {
+    $dir = sys_get_temp_dir().'/account-views-'.bin2hex(random_bytes(4));
+    (new Filesystem)->ensureDirectoryExists("{$dir}/site");
+    file_put_contents("{$dir}/site/layout.blade.php", '<html><body>@yield(\'content\')</body></html>');
+    View::addLocation($dir);
+    config(['sunrice-account.layout' => 'site.layout']);
+
+    try {
+        $this->get('/account/login')->assertOk()->assertDontSee('.account-auth {', false);
+    } finally {
+        (new Filesystem)->deleteDirectory($dir);
+    }
+});

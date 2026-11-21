@@ -143,7 +143,8 @@ A visitor signed in to an account always gets fresh pages from the CMS's page ca
 
 Account pages extend the site's layout: `sunrice-account.layout` (by default the CMS's
 `cms.layout`, `resources/views/cms/layout.blade.php`), or the package's minimal one when the site
-has none. Like it, they fill `@section('content')` and pass `$seoTitle`.
+has none, which styles them (`account::partials.styles`: plain CSS for the `account-*` classes,
+light and dark; a site's own layout styles them itself). Like it, they fill `@section('content')` and pass `$seoTitle`.
 
 The signed-in area's own layout is `account::layout`; your pages extend it and fill
 `@section('account')`:
@@ -178,7 +179,7 @@ What protects them:
 
 - Rate limits per email + IP and per IP: 5 and 30 sign-in attempts a minute, 5 registrations an
   hour from one address, 3 and 10 reset links per 10 minutes.
-- The panel's captcha (`sunrice-admin.captcha`) when it's set up, and a honeypot on every form.
+- The panel's captcha (`sunrice-admin.captcha`) when it's set up, and a honeypot on the forms that send email (not on password sign-in, which password managers send at once; it is throttled).
 - New passwords follow the panel's password policy (Settings → Security).
 - Locked accounts (`AccountGuard::lock()`) can't sign in. While the site shares the admin's guard,
   accounts that open the admin are sent to the admin's sign-in, which has its own protections.
