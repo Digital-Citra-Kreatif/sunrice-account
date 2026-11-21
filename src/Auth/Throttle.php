@@ -34,6 +34,25 @@ final class Throttle
         }
     }
 
+    /**
+     * A limit on one signed-in account's attempts (its current password on
+     * the profile page): `$max` failures per `$decaySeconds`, from any IP.
+     *
+     * @throws ValidationException when there were too many
+     */
+    public static function account(string $name, mixed $key, string $field, int $max = 5, int $decaySeconds = 600, bool $hit = false): void
+    {
+        $limiter = "account-{$name}:user:".(is_scalar($key) ? (string) $key : '');
+        if ($hit) {
+            RateLimiter::hit($limiter, $decaySeconds);
+
+            return;
+        }
+        if (RateLimiter::tooManyAttempts($limiter, $max)) {
+            throw ValidationException::withMessages([$field => __('account::auth.throttled', ['seconds' => RateLimiter::availableIn($limiter)])]);
+        }
+    }
+
     /** Forget the email + IP attempts (after a success); the IP's stay. */
     public static function clear(string $name, Request $request, string $email): void
     {

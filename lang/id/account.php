@@ -19,6 +19,7 @@ return [
         'unverified' => 'Alamat ini belum terverifikasi.',
         'current_password' => 'Kata sandi saat ini',
         'current_password_help' => 'Diperlukan untuk mengganti alamat email Anda.',
+        'email_unavailable' => 'Alamat ini tidak dapat dipakai untuk akun Anda. Pilih yang lain.',
         'email_needs_password' => 'Masukkan kata sandi Anda saat ini untuk mengganti alamat email.',
     ],
     'password' => [

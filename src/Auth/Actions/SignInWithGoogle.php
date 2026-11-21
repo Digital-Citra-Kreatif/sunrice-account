@@ -68,7 +68,8 @@ final class SignInWithGoogle
                 'email' => $email !== '' ? $email : null, 'avatar' => $google->getAvatar(), 'created_at' => now(), 'updated_at' => now()]);
         }
         if ($verified) {
-            $this->verify->handle($user, $locale);
+            // A Google-verified address: an unverified account with it loses what someone else may have set.
+            $created ? $this->verify->handle($user, $locale) : $this->verify->claim($user, $locale);
         }
         if ($created) {
             event(new LaravelRegistered($user));

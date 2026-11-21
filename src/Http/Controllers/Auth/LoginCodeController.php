@@ -34,7 +34,10 @@ final class LoginCodeController
         $email = Users::normalizeEmail($request->string('email')->toString());
         // 1 a minute per email (and IP), 10 per 10 minutes per IP.
         Throttle::check('code', $request, $email, 1, 10);
+        // And 5 an hour for one email from any IP: nobody can flood an inbox, or keep replacing its code.
+        Throttle::account('code-mail', $email, 'email', 5, 3600);
         Throttle::hit('code', $request, $email, 600);
+        Throttle::account('code-mail', $email, 'email', 5, 3600, hit: true);
         if (! app(Captcha::class)->passes($request)) {
             return back()->withInput($request->only('email'))->withErrors(['captcha' => __('account::auth.captcha')]);
         }
@@ -72,12 +75,14 @@ final class LoginCodeController
         if ($user === null || SiteGuard::refusesStaff($user) || $accounts->isLocked($user)) {
             throw ValidationException::withMessages(['code' => __('account::auth.code.incorrect')]);
         }
-        $error = $codes->consume($user, $request->string('code')->toString(), $request);
-        if ($error !== null) {
-            throw ValidationException::withMessages(['code' => __('account::auth.code.'.$error)]);
+        // One answer for every failure (wrong, expired, used up, too many tries): one for an email with
+        // no account couldn't be told apart from it.
+        if ($codes->consume($user, $request->string('code')->toString(), $request) !== null) {
+            throw ValidationException::withMessages(['code' => __('account::auth.code.incorrect')]);
         }
 
-        $verify->handle($user, app()->getLocale());
+        // The code proves the address: an unverified account with it loses what someone else may have set.
+        $verify->claim($user, app()->getLocale());
         $remember = $request->boolean('remember');
         SiteGuard::get()->login($user, $remember);
         $request->session()->forget(self::SESSION);

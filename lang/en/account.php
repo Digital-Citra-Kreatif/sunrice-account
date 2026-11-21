@@ -19,6 +19,7 @@ return [
         'unverified' => 'This address isn\'t verified yet.',
         'current_password' => 'Current password',
         'current_password_help' => 'Needed to change your email address.',
+        'email_unavailable' => 'This address can\'t be used for your account. Choose another.',
         'email_needs_password' => 'Enter your current password to change your email address.',
     ],
     'password' => [

@@ -61,6 +61,9 @@ it('answers the same for an email without an account', function () {
     $this->assertGuest('account');
 });
 
+/** Every failure reads the same: an email with no account gets it too. */
+const INCORRECT_CODE = 'Kode ini tidak berlaku. Periksa lagi, atau minta kode baru: kode hanya berlaku sekali, selama beberapa menit, di browser yang memintanya.';
+
 it('refuses wrong codes, and every try for a minute after five', function () {
     siteUser();
     $code = requestCode();
@@ -69,11 +72,11 @@ it('refuses wrong codes, and every try for a minute after five', function () {
     foreach (range(1, 4) as $i) {
         $this->post('/account/login/code/check', ['code' => $wrong])->assertSessionHasErrors('code');
     }
-    expect(session('errors')->first('code'))->toBe('Kode ini tidak benar.');
+    expect(session('errors')->first('code'))->toBe(INCORRECT_CODE);
     $this->post('/account/login/code/check', ['code' => $wrong]);
     $this->post('/account/login/code/check', ['code' => $code])->assertSessionHasErrors('code');
 
-    expect(session('errors')->first('code'))->toBe('Terlalu banyak percobaan: tunggu sebentar, lalu coba lagi.');
+    expect(session('errors')->first('code'))->toBe(INCORRECT_CODE);
     $this->assertGuest('account');
 });
 
@@ -82,11 +85,11 @@ it('refuses an expired code, and a code used in another browser', function () {
     $code = requestCode();
 
     $this->withHeader('User-Agent', 'Another browser')->post('/account/login/code/check', ['code' => $code])->assertSessionHasErrors('code');
-    expect(session('errors')->first('code'))->toBe('Gunakan kode di browser yang memintanya.');
+    expect(session('errors')->first('code'))->toBe(INCORRECT_CODE);
 
     $this->travel(11)->minutes();
     $this->post('/account/login/code/check', ['code' => $code])->assertSessionHasErrors('code');
-    expect(session('errors')->first('code'))->toBe('Kode ini sudah kedaluwarsa: minta kode baru.');
+    expect(session('errors')->first('code'))->toBe(INCORRECT_CODE);
     $this->assertGuest('account');
 });
 
@@ -106,4 +109,31 @@ it('sends no code to staff while the site shares the admin\'s guard', function (
     $this->post('/account/login/code', ['email' => 'ana@example.com'])->assertRedirect('/account/login/code');
 
     Notification::assertNothingSent();
+});
+
+it('takes back an unverified account from whoever made it, when a code proves its email', function () {
+    siteUser(['password' => 'attacker-pass', 'email_verified_at' => null]);
+
+    $this->post('/account/login/code/check', ['code' => requestCode()])->assertRedirect();
+    $this->assertAuthenticated('account');
+    $this->post('/account/logout');
+
+    $this->post('/account/login', ['email' => 'ana@example.com', 'password' => 'attacker-pass'])->assertSessionHasErrors('email');
+});
+
+it('answers the same for an email without an account, however many tries', function () {
+    $this->post('/account/login/code', ['email' => 'nobody@example.com']);
+    foreach (range(1, 6) as $i) {
+        $this->post('/account/login/code/check', ['code' => '000000'])->assertSessionHasErrors('code');
+        expect(session('errors')->first('code'))->toBe(INCORRECT_CODE);
+    }
+});
+
+it('sends at most five codes an hour to an email, from any IP', function () {
+    siteUser();
+    foreach (range(1, 5) as $i) {
+        $this->withServerVariables(['REMOTE_ADDR' => "10.0.0.{$i}"])->post('/account/login/code', ['email' => 'ana@example.com'])->assertSessionHasNoErrors();
+    }
+    $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.9'])->post('/account/login/code', ['email' => 'ana@example.com'])->assertSessionHasErrors('email');
+    Notification::assertSentToTimes(User::query()->sole(), LoginCodeNotification::class, 5);
 });

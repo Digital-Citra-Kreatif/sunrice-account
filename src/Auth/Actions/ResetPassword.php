@@ -17,6 +17,7 @@ use Sunrice\Account\Events\PasswordReset;
 use Sunrice\Account\Profiles\Models\Profile;
 use Sunrice\Account\Support\Input;
 use Sunrice\Admin\Auth\PasswordPolicy;
+use Sunrice\Admin\Security\AccountGuard;
 
 /**
  * Sets a new password with a reset link's token. The link proves the
@@ -50,6 +51,8 @@ final class ResetPassword
                     'email_verified_at' => $user->getAttribute('email_verified_at') ?? now(),
                 ])->save();
                 Profile::forUser($user)->forceFill(['password_set' => true])->save();
+                // Every session ends: one someone else holds, who may be why the password was reset.
+                app(AccountGuard::class)->signOutEverywhere($user, false);
                 event(new PasswordReset($user));
             },
         );

@@ -30,6 +30,6 @@ final class DeletionRequestNotification extends AccountEmail
     {
         return $mail
             ->line($this->text('intro', ['site' => self::site()]))
-            ->line($this->text('details', ['name' => $this->name, 'email' => $this->email]));
+            ->line($this->text('details', ['name' => self::plain($this->name), 'email' => self::plain($this->email)]));
     }
 }

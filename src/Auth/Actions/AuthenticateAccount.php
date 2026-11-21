@@ -34,6 +34,10 @@ final class AuthenticateAccount
     public function handle(string $email, string $password, bool $remember = false): Authenticatable
     {
         $user = Users::findByEmail($email);
+        if ($user === null) {
+            // As long as a wrong password takes: the time doesn't tell which emails have an account.
+            Hash::check($password, self::dummyHash());
+        }
         if ($user === null || ! self::passwordMatches($user, $password) || $this->accounts->isLocked($user)) {
             throw ValidationException::withMessages(['email' => __('account::auth.login.failed')]);
         }
@@ -52,10 +56,22 @@ final class AuthenticateAccount
         return $user;
     }
 
+    private static ?string $dummyHash = null;
+
+    private static function dummyHash(): string
+    {
+        return self::$dummyHash ??= Hash::make('sunrice-account-no-such-user');
+    }
+
     private static function passwordMatches(Authenticatable $user, string $password): bool
     {
         $hash = $user->getAuthPassword();
+        if ($hash === '') {
+            Hash::check($password, self::dummyHash());
 
-        return $hash !== '' && Hash::check($password, $hash);
+            return false;
+        }
+
+        return Hash::check($password, $hash);
     }
 }

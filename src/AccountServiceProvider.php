@@ -12,9 +12,11 @@ use Sunrice\Account\Auth\SiteGuard;
 use Sunrice\Account\Emails\Emails;
 use Sunrice\Account\Events\DeletionRequested;
 use Sunrice\Account\Events\Registered;
+use Sunrice\Account\Events\SignedIn;
 use Sunrice\Account\Events\Verified;
 use Sunrice\Account\Http\Middleware;
 use Sunrice\Account\Listeners\ClearRouteCache;
+use Sunrice\Account\Listeners\MarkSessionStart;
 use Sunrice\Account\Listeners\NotifyStaffOfDeletionRequest;
 use Sunrice\Account\Listeners\NotifyStaffOfRegistration;
 use Sunrice\Account\Listeners\SendWelcomeEmail;
@@ -85,6 +87,7 @@ final class AccountServiceProvider extends PackageServiceProvider
         Event::listen(Registered::class, NotifyStaffOfRegistration::class);
         Event::listen(DeletionRequested::class, NotifyStaffOfDeletionRequest::class);
         Event::listen(SettingsSaved::class, ClearRouteCache::class);
+        Event::listen(SignedIn::class, MarkSessionStart::class);
 
         $navigation = $this->app->make(MyAccount\Navigation::class);
         $navigation->add('announcement', fn (): string => $this->app->make(MyAccount\Announcement::class)->title(), 'account.announcement',
