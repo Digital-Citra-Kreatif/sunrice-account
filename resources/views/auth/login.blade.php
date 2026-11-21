@@ -20,6 +20,7 @@
             {{ $captcha }}
             <button type="submit" class="account-button account-button--primary">{{ __('account::auth.login.submit') }}</button>
             <a class="account-auth__link" href="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.password.request') }}">{{ __('account::auth.login.forgot') }}</a>
+            <a class="account-auth__link" href="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.verification.notice') }}">{{ __('account::auth.login.no_link') }}</a>
         </form>
         @if ($registration)
             <p class="account-auth__alt">{{ __('account::auth.login.no_account') }}

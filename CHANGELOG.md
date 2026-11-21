@@ -41,3 +41,15 @@
     `terms_url` and `redirect_after_login`.
   - Events: `Registering` (change the data, or refuse with a `ValidationException`), `Registered`,
     `SignedIn`, `SignedOut`, `PasswordReset`. Actions in `Sunrice\Account\Auth\Actions`.
+- Email verification (`general.verify_email`, on by default):
+  - A new account gets a signed link (`/account/verify/{id}/{hash}`, `account.verify`, valid for
+    `auth.verification.expire` minutes, a day by default) instead of being signed in; the answer is
+    the same as for a taken email. The link verifies the address, signs the account in and opens
+    My Account in the language it was sent in. A changed email invalidates its old links.
+  - Signing in with an unverified email is refused, with a new link at most once a minute;
+    `/account/verify` (`account.verification.notice`) asks for one, with the same answer for any
+    email.
+  - Staff while the site shares the admin's guard, and locked accounts, are verified by their
+    link but not signed in.
+  - Middleware `account.verified` for pages that need a verified email; `Verification::verified()`,
+    `Verification::url()`; `Verified` event; actions `SendVerificationLink` and `VerifyEmail`.

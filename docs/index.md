@@ -100,6 +100,7 @@ same languages, and the middleware:
 | `account.auth` | Signed-in accounts only. Guests go to the sign-in page (`account.login`) and come back |
 | `account.guest` | Guests only (sign in, register); signed-in accounts go to My Account |
 | `account.noindex` | `X-Robots-Tag: noindex`, `Cache-Control: private, no-store`, and the layout's robots tag |
+| `account.verified` | After `account.auth`: a verified email while verification is required; others are asked to verify first |
 
 A visitor signed in to an account always gets fresh pages from the CMS's page cache.
 
@@ -153,13 +154,36 @@ What protects them:
 New accounts get the default roles (`general.default_roles`) and a profile with their phone,
 language and marketing consent.
 
+### Email verification
+
+While `general.verify_email` is on (the default), a new account isn't signed in: it gets an email
+with a signed link (`account.verify`, valid for `auth.verification.expire` minutes, a day by
+default), and the visitor sees "check your email", as for an email that already has an account.
+The link verifies the address, signs the account in and opens My Account in the language it was
+sent in. Signing in with an unverified email is refused and sends a new link (at most once a
+minute); `/account/verify` (`account.verification.notice`) asks for one.
+
+An email is verified when the user's `email_verified_at` is set: by its link, by a password reset
+(the reset link proves the address too), or by staff. Changing the email invalidates the old links.
+
+```php
+use Sunrice\Account\Auth\Verification;
+
+Verification::verified($user);
+Verification::url($user, 'en');   // a fresh signed link
+```
+
+Staff while the site shares the admin's guard, and locked accounts, are verified by their link but
+not signed in by it.
+
 ### Events
 
 | Event | When |
 | --- | --- |
 | `Registering` | Before an account is created: change `$event->data`, or refuse by throwing a `ValidationException` (its messages show on the form) |
 | `Registered` | An account was created (`$user`, `$profile`, `$data`, `$locale`), after Laravel's `Registered` |
-| `SignedIn` | An account signed in on the site (`$user`, `$method`, `$remember`) |
+| `SignedIn` | An account signed in on the site (`$user`, `$method`: `password`, `registration`, `verification`; `$remember`) |
+| `Verified` | An account verified its email with its link (`$user`, `$locale`) |
 | `SignedOut` | An account signed out |
 | `PasswordReset` | An account chose a new password with a reset link |
 

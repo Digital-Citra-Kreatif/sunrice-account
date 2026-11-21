@@ -55,7 +55,7 @@ sunrice-commerce's customer accounts. Commerce today has all of this built in
 3. **Sign-in flows** ✅: login, logout, register, forgot and reset password; throttling (per email +
    IP, per IP), captcha, honeypot, password policy, no account enumeration, the shared-guard staff
    check. Actions in `src/Auth/Actions`.
-4. **Email verification**: signed link, resend, re-verification when the email changes.
+4. **Email verification** ✅: signed link, resend, re-verification when the email changes.
 5. **Emails**: registry, on/off switches (verify and reset can't be switched off), staff
    recipients by address and role, subject per language, publishable templates with the panel's
    mail brand, queued. Welcome, verify, reset, and to staff: new registration and deletion request.

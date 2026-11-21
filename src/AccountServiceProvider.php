@@ -58,6 +58,7 @@ final class AccountServiceProvider extends PackageServiceProvider
         $router->aliasMiddleware('account.auth', Middleware\Authenticate::class);
         $router->aliasMiddleware('account.guest', Middleware\RedirectIfAuthenticated::class);
         $router->aliasMiddleware('account.noindex', Middleware\NoIndex::class);
+        $router->aliasMiddleware('account.verified', Middleware\EnsureEmailVerified::class);
 
         // After the app has booted: the site's saved languages and the account path apply, and
         // plugins have added their pages. The CMS's catch-all is a fallback route, so these win.

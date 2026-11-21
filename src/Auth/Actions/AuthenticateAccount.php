@@ -4,25 +4,31 @@ declare(strict_types=1);
 
 namespace Sunrice\Account\Auth\Actions;
 
-use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Account\Auth\SiteGuard;
 use Sunrice\Account\Auth\Users;
+use Sunrice\Account\Auth\Verification;
 use Sunrice\Account\Events\SignedIn;
-use Sunrice\Admin\Panel;
+use Sunrice\Account\Settings\AccountSettings;
 use Sunrice\Admin\Security\AccountGuard;
 
 /**
  * Signs an account in on the site with its email and password. Every
  * refusal reads the same ("These details don't match"), except for staff
- * while the site shares the admin's guard: they're told to use the
- * admin's sign-in, which has its own protections (two-factor, lockouts).
+ * while the site shares the admin's guard (they're told to use the
+ * admin's sign-in, which has its own protections), and, once the password
+ * is right, an unverified email while verification is required (a new
+ * link is sent, at most once a minute).
  */
 final class AuthenticateAccount
 {
-    public function __construct(private AccountGuard $accounts) {}
+    public function __construct(
+        private AccountGuard $accounts,
+        private AccountSettings $settings,
+        private SendVerificationLink $verification,
+    ) {}
 
     /** @throws ValidationException */
     public function handle(string $email, string $password, bool $remember = false): Authenticatable
@@ -31,8 +37,13 @@ final class AuthenticateAccount
         if ($user === null || ! self::passwordMatches($user, $password) || $this->accounts->isLocked($user)) {
             throw ValidationException::withMessages(['email' => __('account::auth.login.failed')]);
         }
-        if (SiteGuard::sharesPanelGuard() && $user instanceof Authorizable && $user->can(Panel::ACCESS)) {
+        if (SiteGuard::refusesStaff($user)) {
             throw ValidationException::withMessages(['email' => __('account::auth.login.staff')]);
+        }
+        if ($this->settings->boolean('general.verify_email', true) && ! Verification::verified($user)) {
+            $this->verification->handle($user, app()->getLocale());
+
+            throw ValidationException::withMessages(['email' => __('account::auth.verify.required')]);
         }
 
         SiteGuard::get()->login($user, $remember);
