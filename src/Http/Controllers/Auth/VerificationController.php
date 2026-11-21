@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 use Sunrice\Account\Auth\Actions\SendVerificationLink;
 use Sunrice\Account\Auth\Actions\VerifyEmail;
 use Sunrice\Account\Auth\SiteGuard;
@@ -57,7 +58,9 @@ final class VerificationController
      */
     public function verify(Request $request, string $id, string $hash, VerifyEmail $verify, AccountGuard $accounts): RedirectResponse
     {
-        abort_unless($request->hasValidSignature(), 403);
+        if (! URL::hasValidSignature($request)) {
+            abort(403);
+        }
         $user = Users::model()::query()->find($id);
         if (! $user instanceof Authenticatable || ! hash_equals(Verification::hash($user), $hash)) {
             abort(403);
