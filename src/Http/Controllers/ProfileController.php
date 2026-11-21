@@ -30,9 +30,9 @@ final class ProfileController
             'user' => $user,
             'profile' => $profile,
             'fields' => $fields->profile(),
-            'phone' => $settings->string('general.phone', 'optional'),
-            'marketing' => $settings->boolean('general.marketing_consent', true),
-            'deletion' => $settings->boolean('general.deletion_requests', true),
+            'phone' => $settings->phone,
+            'marketing' => $settings->marketingConsent,
+            'deletion' => $settings->deletionRequests,
             'seoTitle' => __('account::account.profile.title'),
         ]);
     }
@@ -54,7 +54,7 @@ final class ProfileController
 
     public function requestDeletion(Request $request, AccountSettings $settings, RequestDeletion $request_): RedirectResponse
     {
-        abort_unless($settings->boolean('general.deletion_requests', true), 404);
+        abort_unless($settings->deletionRequests, 404);
         $request->validate(['confirm' => ['accepted']]);
         $request_->handle($this->user());
 

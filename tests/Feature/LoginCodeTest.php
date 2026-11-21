@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
-use Sunrice\Account\Facades\Account;
 use Sunrice\Account\Notifications\LoginCodeNotification;
 use Sunrice\Account\Notifications\WelcomeNotification;
 use Sunrice\Admin\Actions\Permissions\SyncPermissions;
@@ -13,7 +12,7 @@ use Workbench\App\Models\User;
 
 beforeEach(function () {
     Notification::fake();
-    Account::settings()->saveSection('general', ['login_code' => true]);
+    accountSettings(['loginCode' => true]);
 });
 
 /** Asks for a code for the email and returns the one emailed. */
@@ -31,7 +30,7 @@ function requestCode(string $email = 'ana@example.com'): string
 }
 
 it('is off unless the settings turn it on', function () {
-    Account::settings()->saveSection('general', ['login_code' => false]);
+    accountSettings(['loginCode' => false]);
 
     $this->post('/account/login/code', ['email' => 'ana@example.com'])->assertNotFound();
     $this->get('/account/login')->assertDontSee('/account/login/code');

@@ -32,7 +32,7 @@ function staffWith(string $role, string $email): User
 
 it('welcomes a new account at registration while emails aren\'t verified', function () {
     Notification::fake();
-    Account::settings()->saveSection('general', ['verify_email' => false]);
+    accountSettings(['verifyEmail' => false]);
 
     signUp(path: '/en/account/register');
 
@@ -56,7 +56,7 @@ it('tells super admins, administrators and the set addresses of a new account, e
     $super = staffWith((string) config('sunrice-admin.super_admin_role', 'super-admin'), 'boss@example.com');
     $admin = staffWith('administrator', 'admin@example.com');
     $editor = staffWith('editor', 'editor@example.com');
-    Account::settings()->saveSection('emails', [Emails::STAFF_REGISTRATION => ['addresses' => 'office@example.com, Boss@example.com, not-an-email']]);
+    accountSettings(['staffRegistrationAddresses' => "office@example.com\nBoss@example.com\nnot-an-email"]);
 
     signUp();
 
@@ -69,22 +69,19 @@ it('sends staff emails to the chosen roles, and not at all when switched off', f
     Notification::fake();
     staffWith('administrator', 'admin@example.com');
     $editor = staffWith('editor', 'editor@example.com');
-    Account::settings()->saveSection('emails', [Emails::STAFF_REGISTRATION => ['roles' => ['editor']]]);
+    accountSettings(['staffRegistrationRoles' => ['editor']]);
 
     signUp();
     Notification::assertSentTo($editor, NewRegistrationNotification::class);
     Notification::assertSentTimes(NewRegistrationNotification::class, 1);
 
-    Account::settings()->saveSection('emails', [Emails::STAFF_REGISTRATION => ['roles' => ['editor'], 'enabled' => false]]);
+    accountSettings(['staffRegistrationEmail' => false]);
     signUp('other@example.com');
     Notification::assertSentTimes(NewRegistrationNotification::class, 1);
 });
 
 it('never switches off the security emails', function () {
-    Account::settings()->saveSection('emails', [
-        Emails::VERIFY => ['enabled' => false],
-        Emails::WELCOME => ['enabled' => false],
-    ]);
+    accountSettings(['welcomeEmail' => false]);
 
     expect(Account::emailSettings()->enabled(Emails::VERIFY))->toBeTrue()
         ->and(Account::emailSettings()->enabled(Emails::RESET))->toBeTrue()
@@ -95,7 +92,7 @@ it('never switches off the security emails', function () {
 
 it('uses the subject set for the language, with its placeholders', function () {
     $user = siteUser();
-    Account::settings()->saveSection('emails', [Emails::WELCOME => ['subject' => ['id' => 'Halo {name} di :site']]]);
+    accountSettings(['welcomeSubject' => 'id: Halo {name} di :site']);
     $site = app(Panel::class)->mailBrand()->name;
 
     expect((new WelcomeNotification('id'))->toMail($user)->subject)->toBe("Halo Ana di {$site}")
@@ -130,4 +127,16 @@ it('lets plugins register their own emails', function () {
         ->and(Account::emailSettings()->enabled('shop_order_note'))->toBeFalse()
         ->and(Account::emailSettings()->enabled('unknown'))->toBeFalse()
         ->and(array_keys(Account::emails()->all()))->toContain(Emails::WELCOME, Emails::STAFF_REGISTRATION);
+});
+
+it('reads a plugin email\'s settings from the plugin', function () {
+    Account::emails()->register(new EmailDefinition('shop_order_note', 'Order note', 'shop::emails.note', 'staff', settings: fn (): array => [
+        'enabled' => true, 'subject' => "id: Catatan\nen: Note", 'addresses' => ['Shop@Example.com'], 'roles' => ['editor'],
+    ]));
+
+    expect(Account::emailSettings()->enabled('shop_order_note'))->toBeTrue()
+        ->and(Account::emailSettings()->subject('shop_order_note', 'en'))->toBe('Note')
+        ->and(Account::emailSettings()->subject('shop_order_note', 'fr'))->toBeNull()
+        ->and(Account::emailSettings()->addresses('shop_order_note'))->toBe(['shop@example.com'])
+        ->and(Account::emailSettings()->roles('shop_order_note'))->toBe(['editor']);
 });

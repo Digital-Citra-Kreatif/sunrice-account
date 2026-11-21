@@ -17,7 +17,7 @@ beforeEach(function () {
 });
 
 it('adds plugins\' fields to registration, validated and kept in the profile', function () {
-    Account::settings()->saveSection('general', ['verify_email' => false]);
+    accountSettings(['verifyEmail' => false]);
     $this->get('/account/register')->assertSee('name="fields[shop_company]"', false)->assertSee('Weekly letter');
     $input = ['name' => 'Budi', 'email' => 'budi@example.com', 'password' => 'Correct-Horse-Battery-9', 'password_confirmation' => 'Correct-Horse-Battery-9'];
 

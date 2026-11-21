@@ -116,7 +116,7 @@ it('emails staff a deletion request', function () {
 });
 
 it('can turn deletion requests off', function () {
-    Account::settings()->saveSection('general', ['deletion_requests' => false]);
+    accountSettings(['deletionRequests' => false]);
 
     $this->get('/account/profile')->assertDontSee('Hapus akun saya');
     $this->post('/account/profile/delete', ['confirm' => '1'])->assertNotFound();

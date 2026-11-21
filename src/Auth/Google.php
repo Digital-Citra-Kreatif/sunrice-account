@@ -10,7 +10,7 @@ use Laravel\Socialite\Two\AbstractProvider;
 use Sunrice\Account\Settings\AccountSettings;
 
 /**
- * Sign in with Google (`general.google_login`), with laravel/socialite:
+ * Sign in with Google (Settings → Accounts → Sign-in), with laravel/socialite:
  * the credentials of config/services.php's `google`, else
  * `sunrice-account.google`, and one fixed callback URL.
  *
@@ -20,7 +20,7 @@ final class Google
 {
     public static function available(): bool
     {
-        return app(AccountSettings::class)->boolean('general.google_login') && self::configured();
+        return app(AccountSettings::class)->googleLogin && self::configured();
     }
 
     public static function configured(): bool

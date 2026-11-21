@@ -23,7 +23,7 @@ final class Redirects
         if (is_string($intended) && self::onThisSite($request, $intended)) {
             return $intended;
         }
-        $path = trim(app(AccountSettings::class)->string('general.redirect_after_login'), '/ ');
+        $path = trim(app(AccountSettings::class)->redirectAfterLogin, '/ ');
         if ($path !== '') {
             return url(Locales::prefix(app()->getLocale()).'/'.$path);
         }

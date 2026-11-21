@@ -51,7 +51,7 @@ final class SignInWithGoogle
         }
         $created = false;
         if (! $user instanceof Authenticatable) {
-            if (! $this->settings->boolean('general.registration', true) || $email === '' || ! $verified) {
+            if (! $this->settings->registration || $email === '' || ! $verified) {
                 return 'no_account';
             }
             $user = $this->create($google, $email, $locale);

@@ -40,7 +40,7 @@ final class AuthenticateAccount
         if (SiteGuard::refusesStaff($user)) {
             throw ValidationException::withMessages(['email' => __('account::auth.login.staff')]);
         }
-        if ($this->settings->boolean('general.verify_email', true) && ! Verification::verified($user)) {
+        if ($this->settings->verifyEmail && ! Verification::verified($user)) {
             $this->verification->handle($user, app()->getLocale());
 
             throw ValidationException::withMessages(['email' => __('account::auth.verify.required')]);

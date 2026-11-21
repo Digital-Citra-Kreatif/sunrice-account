@@ -23,7 +23,7 @@ final class EnsureEmailVerified
     public function handle(Request $request, Closure $next): Response
     {
         $user = SiteGuard::get()->user();
-        if ($user === null || ! app(AccountSettings::class)->boolean('general.verify_email', true) || Verification::verified($user)) {
+        if ($user === null || ! app(AccountSettings::class)->verifyEmail || Verification::verified($user)) {
             return $next($request);
         }
         if ($request->expectsJson()) {

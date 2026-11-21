@@ -8,7 +8,7 @@ use Sunrice\Admin\Actions\Permissions\SeedRoles;
 use Sunrice\Admin\Panel;
 
 it('declares the account permissions', function () {
-    expect(app(Panel::class)->getPermissions())->toHaveKey('account.settings.manage');
+    expect(app(Panel::class)->getPermissions())->toHaveKey('account.settings.accounts');
 });
 
 it('seeds the member role without any admin permission', function () {

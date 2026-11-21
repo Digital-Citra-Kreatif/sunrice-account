@@ -14,10 +14,10 @@ use Sunrice\Account\Notifications\LoginCodeNotification;
 use Sunrice\Account\Settings\AccountSettings;
 
 /**
- * Emailed sign-in codes (`general.login_code`), with
+ * Emailed sign-in codes (Settings → Accounts → Sign-in), with
  * spatie/laravel-one-time-passwords: the user model uses its
  * `HasOneTimePasswords` trait, and its `one_time_passwords` table exists.
- * A code is 6 digits, valid for `general.code_minutes`, usable once, from
+ * A code is 6 digits, valid for `codeMinutes`, usable once, from
  * the browser that asked (same IP and user agent); a new code replaces
  * the previous one; 5 tries a minute per account (and the controller's own
  * throttle on top).
@@ -39,7 +39,7 @@ final class LoginCodes
 
     public function available(): bool
     {
-        return $this->settings->boolean('general.login_code');
+        return $this->settings->loginCode;
     }
 
     /** Creates a code for the user (replacing an earlier one) and emails it. */
@@ -69,6 +69,6 @@ final class LoginCodes
 
     public function minutes(): int
     {
-        return max(1, min(60, (int) $this->settings->string('general.code_minutes', '10')));
+        return max(1, min(60, $this->settings->codeMinutes));
     }
 }

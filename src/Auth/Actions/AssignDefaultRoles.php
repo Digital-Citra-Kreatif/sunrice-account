@@ -20,7 +20,7 @@ final class AssignDefaultRoles
         if (! method_exists($user, 'assignRole')) {
             return;
         }
-        foreach ($this->settings->strings('general.default_roles') as $role) {
+        foreach ($this->settings->roles() as $role) {
             $user->assignRole(Role::findOrCreate($role, $this->panel->getGuard()));
         }
     }

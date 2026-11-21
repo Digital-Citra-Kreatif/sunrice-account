@@ -24,7 +24,7 @@ final class SendWelcomeEmail
 
     public function handle(Registered|Verified $event): void
     {
-        if ($event instanceof Registered && ($this->settings->boolean('general.verify_email', true) || Verification::verified($event->user))) {
+        if ($event instanceof Registered && ($this->settings->verifyEmail || Verification::verified($event->user))) {
             return;
         }
         Notification::send($event->user, new WelcomeNotification($event->locale));

@@ -80,7 +80,7 @@ final class AccountRoutes
     /** Where the account pages live: the settings page's path, else config paths.prefix ("account"). */
     public static function prefix(): string
     {
-        $path = trim(app(AccountSettings::class)->string('general.path'), '/ ');
+        $path = trim(app(AccountSettings::class)->path, '/ ');
 
         return $path !== '' ? $path : self::path('prefix');
     }

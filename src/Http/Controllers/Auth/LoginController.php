@@ -25,7 +25,7 @@ final class LoginController
         return view(Layout::view('auth.login'), [
             'seoTitle' => __('account::auth.login.title'),
             'captcha' => app(Captcha::class)->widget(app()->getLocale()),
-            'registration' => app(AccountSettings::class)->boolean('general.registration', true),
+            'registration' => app(AccountSettings::class)->registration,
             'codes' => app(LoginCodes::class)->available(),
             'google' => Google::available(),
         ]);

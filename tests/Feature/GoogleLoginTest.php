@@ -18,7 +18,7 @@ use Workbench\App\Models\User;
 beforeEach(function () {
     Notification::fake();
     config(['services.google' => ['client_id' => 'client', 'client_secret' => 'secret']]);
-    Account::settings()->saveSection('general', ['google_login' => true]);
+    accountSettings(['googleLogin' => true]);
 });
 
 /** Google answers the callback with this user. */
@@ -32,10 +32,10 @@ function googleReturns(string $email = 'gita@example.com', bool $verified = true
 }
 
 it('is off unless the settings turn it on and Google is set up', function () {
-    Account::settings()->saveSection('general', ['google_login' => false]);
+    accountSettings(['googleLogin' => false]);
     $this->get('/account/login/google')->assertNotFound();
 
-    Account::settings()->saveSection('general', ['google_login' => true]);
+    accountSettings(['googleLogin' => true]);
     config(['services.google' => [], 'sunrice-account.google' => ['client_id' => null, 'client_secret' => null]]);
     $this->get('/account/login/google')->assertNotFound();
     $this->get('/account/login')->assertDontSee('/account/login/google');
@@ -87,7 +87,7 @@ it('creates no account for an unverified Google email, nor while registration is
     googleReturns(verified: false);
     $this->get('/account/login/google/callback')->assertRedirect('/account/login')->assertSessionHasErrors('email');
 
-    Account::settings()->saveSection('general', ['google_login' => true, 'registration' => false]);
+    accountSettings(['googleLogin' => true, 'registration' => false]);
     googleReturns();
     $this->get('/account/login/google/callback')->assertRedirect('/account/login')->assertSessionHasErrors('email');
 

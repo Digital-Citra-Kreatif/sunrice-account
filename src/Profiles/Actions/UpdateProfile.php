@@ -40,7 +40,7 @@ final class UpdateProfile
     {
         $profile = Profile::forUser($user);
         $fields = $this->fields->profile();
-        $phone = $this->settings->string('general.phone', 'optional');
+        $phone = $this->settings->phone;
         $data = Validator::make($input, [
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'string', 'email', 'max:190', Rule::unique($user->getTable(), 'email')->ignore($user->getKey(), $user->getKeyName())],
@@ -54,7 +54,7 @@ final class UpdateProfile
             'name' => Input::string($data, 'name'),
             'email' => Users::normalizeEmail(Input::string($data, 'email')),
             'phone' => $phone === 'off' ? $profile->phone : Input::nullableString($data, 'phone'),
-            'accepts_marketing' => $this->settings->boolean('general.marketing_consent', true) ? (bool) ($data['accepts_marketing'] ?? false) : $profile->accepts_marketing,
+            'accepts_marketing' => $this->settings->marketingConsent ? (bool) ($data['accepts_marketing'] ?? false) : $profile->accepts_marketing,
             'fields' => Fields::values($fields, $data),
         ]);
         event($event);
@@ -67,7 +67,7 @@ final class UpdateProfile
         if ($emailChanged && $profile->password_set && ! Hash::check(Input::string($data, 'current_password'), $user->getAuthPassword())) {
             throw ValidationException::withMessages(['current_password' => __('account::account.profile.email_needs_password')]);
         }
-        $verify = $emailChanged && $this->settings->boolean('general.verify_email', true);
+        $verify = $emailChanged && $this->settings->verifyEmail;
         $phoneValue = Input::nullableString($values, 'phone');
         $consent = (bool) ($values['accepts_marketing'] ?? false);
         $extra = [];

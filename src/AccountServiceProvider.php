@@ -14,12 +14,13 @@ use Sunrice\Account\Events\DeletionRequested;
 use Sunrice\Account\Events\Registered;
 use Sunrice\Account\Events\Verified;
 use Sunrice\Account\Http\Middleware;
+use Sunrice\Account\Listeners\ClearRouteCache;
 use Sunrice\Account\Listeners\NotifyStaffOfDeletionRequest;
 use Sunrice\Account\Listeners\NotifyStaffOfRegistration;
 use Sunrice\Account\Listeners\SendWelcomeEmail;
 use Sunrice\Account\Routing\AccountRoutes;
-use Sunrice\Account\Settings\AccountSettings;
 use Sunrice\Account\Site\AccountPageCache;
+use Sunrice\Admin\Events\SettingsSaved;
 use Sunrice\Admin\Panel;
 use Sunrice\Admin\Support\PackageConfig;
 
@@ -50,8 +51,6 @@ final class AccountServiceProvider extends PackageServiceProvider
         $this->app->singleton(MyAccount\Navigation::class);
         $this->app->singleton(MyAccount\Dashboard::class);
         $this->app->singleton(MyAccount\Fields::class);
-        // Read once per request (and per queued job).
-        $this->app->scoped(AccountSettings::class);
 
         // The guard needs the panel's guard, known once the app's panel provider has set the panel up.
         $this->app->afterResolving(Panel::class, function (Panel $panel): void {
@@ -85,6 +84,7 @@ final class AccountServiceProvider extends PackageServiceProvider
         Event::listen([Registered::class, Verified::class], SendWelcomeEmail::class);
         Event::listen(Registered::class, NotifyStaffOfRegistration::class);
         Event::listen(DeletionRequested::class, NotifyStaffOfDeletionRequest::class);
+        Event::listen(SettingsSaved::class, ClearRouteCache::class);
 
         $navigation = $this->app->make(MyAccount\Navigation::class);
         $navigation->add('announcement', fn (): string => $this->app->make(MyAccount\Announcement::class)->title(), 'account.announcement',

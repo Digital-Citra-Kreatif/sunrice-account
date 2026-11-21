@@ -8,10 +8,10 @@ use Sunrice\Account\Settings\AccountSettings;
 use Sunrice\Cms\Support\Locales;
 
 /**
- * An optional announcement in My Account (settings `announcement`):
+ * An optional announcement in My Account (Settings → Accounts):
  * as its first page (`tab`, which /account then opens), or above or below
  * every account page. Its title and message are per language, falling back
- * to the main language's.
+ * to the main language's (other languages' messages are one line each).
  *
  * @api
  */
@@ -24,37 +24,32 @@ final class Announcement
     /** Where it shows, or null when it's off or empty. */
     public function position(): ?string
     {
-        if (! $this->settings->boolean('announcement.enabled') || $this->message() === '') {
+        if (! $this->settings->announcement || $this->message() === '') {
             return null;
         }
-        $position = $this->settings->string('announcement.position', 'above');
+        $position = $this->settings->announcementPosition;
 
         return in_array($position, self::POSITIONS, true) ? $position : null;
     }
 
     public function title(): string
     {
-        $title = $this->localized('title');
+        $title = $this->localized($this->settings->announcementTitle, $this->settings->announcementTitles);
 
         return $title !== '' ? $title : (string) __('account::account.announcement.title');
     }
 
     public function message(): string
     {
-        return $this->localized('message');
+        return $this->localized($this->settings->announcementMessage, $this->settings->announcementMessages);
     }
 
-    private function localized(string $part): string
+    /** The current language's line, else the main language's text. */
+    private function localized(string $main, string $others): string
     {
-        $values = $this->settings->get("announcement.{$part}", []);
-        $values = is_array($values) ? $values : [];
-        foreach ([app()->getLocale(), Locales::default()] as $locale) {
-            $value = $values[$locale] ?? null;
-            if (is_string($value) && trim($value) !== '') {
-                return trim($value);
-            }
-        }
+        $locale = app()->getLocale();
+        $text = $locale !== Locales::default() ? AccountSettings::line($others, $locale) : '';
 
-        return '';
+        return $text !== '' ? $text : trim($main);
     }
 }

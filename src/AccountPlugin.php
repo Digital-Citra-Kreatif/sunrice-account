@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Account;
 
 use Sunrice\Account\Permissions\AccountPermissions;
+use Sunrice\Account\Settings\AccountSettings;
 use Sunrice\Admin\BasePlugin;
 use Sunrice\Admin\Panel;
 use Sunrice\Admin\Permissions\Permission;
@@ -16,8 +17,8 @@ use Sunrice\Cms\CmsPlugin;
  *
  *     $panel->plugin(CmsPlugin::make())->plugin(AccountPlugin::make());
  *
- * Adds the account permissions, the "member" role new accounts get, and
- * the developer docs.
+ * Adds Settings → Accounts, the account permissions, the "member" role
+ * new accounts get, and the developer docs.
  */
 final class AccountPlugin extends BasePlugin
 {
@@ -42,6 +43,8 @@ final class AccountPlugin extends BasePlugin
         foreach (AccountPermissions::all() as $name => [$label, $group]) {
             $panel->permissions(Permission::make($name, $label, $group));
         }
+        // Settings → Accounts, behind account.settings.accounts (hidden while a plugin shows it: Account::settingsShownBy()).
+        $panel->settings(AccountSettings::class);
         $panel->privilegedPermissions('account.settings.*');
         // Created by `sunrice:roles`, without any permission: members never open the admin.
         $panel->defaultRole(self::MEMBER_ROLE, []);

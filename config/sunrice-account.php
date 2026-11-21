@@ -31,8 +31,9 @@ return [
     |--------------------------------------------------------------------------
     |
     | The account pages live under `prefix` (/account, and /en/account in the
-    | site's other languages); the settings page can give the prefix another
-    | value (general.path). The other paths are under the prefix.
+    | site's other languages); Settings → Accounts can give the prefix another
+    | value (Account address). The other paths are under the prefix. The other
+    | account settings are in Settings → Accounts (AccountSettings).
     |
     | `layout` is the site layout account pages extend: by default the CMS's
     | site layout (resources/views/cms/layout.blade.php); when it doesn't
@@ -65,53 +66,6 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Settings defaults
-    |--------------------------------------------------------------------------
-    |
-    | What the account settings are until they are saved in the admin.
-    |
-    */
-
-    'defaults' => [
-        'general' => [
-            // Visitors can create an account.
-            'registration' => true,
-            // New accounts confirm their email address before they can sign in.
-            'verify_email' => true,
-            // Roles given to new accounts ("member" is created by `sunrice:roles`).
-            'default_roles' => ['member'],
-            // The account address prefix, when set in the settings page (null: paths.prefix).
-            'path' => null,
-            // The phone number at registration: off, optional or required.
-            'phone' => 'optional',
-            // Offer a "send me news and offers" checkbox at registration.
-            'marketing_consent' => true,
-            // A terms page to agree to at registration (its URL; null: none).
-            'terms_url' => null,
-            // Where people go after signing in, a path on the site (null: My Account).
-            'redirect_after_login' => null,
-            // Sign in with a code sent by email, and how long a code works (minutes, 1–60).
-            'login_code' => false,
-            'code_minutes' => 10,
-            // Sign in with Google (needs the Google credentials below).
-            'google_login' => false,
-            // Accounts can ask to be deleted from their profile page (staff are told).
-            'deletion_requests' => true,
-        ],
-        // An announcement in My Account: as its first page (tab), or above or below every page.
-        'announcement' => [
-            'enabled' => false,
-            'position' => 'above',
-            'title' => [],
-            'message' => [],
-        ],
-        // Per email key (Account::emails()): enabled, subject (per language), and for staff
-        // emails addresses and roles (default: super admins and administrators).
-        'emails' => [],
     ],
 
 ];

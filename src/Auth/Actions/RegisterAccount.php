@@ -95,7 +95,7 @@ final class RegisterAccount
     /** @return array<string, list<mixed>> */
     private function rules(): array
     {
-        $phone = $this->settings->string('general.phone', 'optional');
+        $phone = $this->settings->phone;
 
         return [
             'name' => ['required', 'string', 'max:120'],
@@ -103,7 +103,7 @@ final class RegisterAccount
             'phone' => $phone === 'required' ? ['required', 'string', 'max:30'] : ['nullable', 'string', 'max:30'],
             'password' => ['required', 'string', 'max:255', 'confirmed', ...PasswordPolicy::rules()],
             'accepts_marketing' => ['nullable', 'boolean'],
-            'terms' => $this->settings->string('general.terms_url') !== '' ? ['accepted'] : ['nullable'],
+            'terms' => $this->settings->termsUrl !== '' ? ['accepted'] : ['nullable'],
         ];
     }
 }

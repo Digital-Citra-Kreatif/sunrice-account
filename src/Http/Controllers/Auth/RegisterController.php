@@ -23,21 +23,21 @@ final class RegisterController
 {
     public function show(AccountSettings $settings): View
     {
-        abort_unless($settings->boolean('general.registration', true), 404);
+        abort_unless($settings->registration, 404);
 
         return view(Layout::view('auth.register'), [
             'seoTitle' => __('account::auth.register.title'),
             'captcha' => app(Captcha::class)->widget(app()->getLocale()),
-            'phone' => $settings->string('general.phone', 'optional'),
-            'marketing' => $settings->boolean('general.marketing_consent', true),
-            'termsUrl' => $settings->string('general.terms_url'),
+            'phone' => $settings->phone,
+            'marketing' => $settings->marketingConsent,
+            'termsUrl' => $settings->termsUrl,
             'fields' => app(Fields::class)->registration(),
         ]);
     }
 
     public function store(Request $request, AccountSettings $settings, RegisterAccount $register, SendVerificationLink $verification): RedirectResponse
     {
-        abort_unless($settings->boolean('general.registration', true), 404);
+        abort_unless($settings->registration, 404);
         // 5 accounts an hour from one address.
         Throttle::check('register', $request, '', 1000, 5);
         if (! app(Captcha::class)->passes($request)) {
@@ -50,7 +50,7 @@ final class RegisterController
             return redirect()->to(AccountRoutes::url('account.login'))->with('account.status', __('account::auth.register.check_email'));
         }
 
-        if ($settings->boolean('general.verify_email', true)) {
+        if ($settings->verifyEmail) {
             // The same answer as for a taken email: the link signs the account in.
             $verification->handle($user, app()->getLocale());
 

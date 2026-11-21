@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
 use Sunrice\Account\Events\SignedIn;
 use Sunrice\Account\Events\SignedOut;
-use Sunrice\Account\Facades\Account;
 use Sunrice\Account\Notifications\VerifyEmailNotification;
 use Sunrice\Admin\Actions\Permissions\SyncPermissions;
 use Sunrice\Admin\Panel;
@@ -65,7 +64,7 @@ it('asks an unverified account to verify its email, sending a new link once a mi
 
 it('signs in an unverified account while emails aren\'t verified', function () {
     siteUser(['email_verified_at' => null]);
-    Account::settings()->saveSection('general', ['verify_email' => false]);
+    accountSettings(['verifyEmail' => false]);
 
     $this->post('/account/login', ['email' => 'ana@example.com', 'password' => 'secret-pass'])->assertRedirect('/account');
 });
@@ -111,7 +110,7 @@ it('goes back to the page a guest was going to', function () {
 
 it('goes to the page set in the settings after signing in', function () {
     siteUser();
-    Account::settings()->saveSection('general', ['redirect_after_login' => 'welcome']);
+    accountSettings(['redirectAfterLogin' => 'welcome']);
 
     $this->post('/en/account/login', ['email' => 'ana@example.com', 'password' => 'secret-pass'])->assertRedirect('http://localhost/en/welcome');
 });
