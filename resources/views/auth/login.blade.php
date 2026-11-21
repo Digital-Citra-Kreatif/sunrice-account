@@ -14,7 +14,7 @@
         <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.login.attempt') }}" class="account-form">
             @csrf
             <label class="account-field"><span>{{ __('account::auth.fields.email') }}</span>
-                <input type="email" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
+                <input type="email" name="email" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'email']) value="{{ old('email') }}" required autocomplete="email" autofocus>
                 @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'email'])
                 @if ($adminLogin && $errors->first('email') === __('account::auth.login.staff'))
                     <a class="account-auth__link" href="{{ $adminLogin }}">{{ __('account::auth.login.admin') }}</a>

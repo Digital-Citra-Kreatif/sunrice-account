@@ -10,11 +10,11 @@
     <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.profile.update') }}" class="account-form account-form--profile">
         @csrf @method('PUT')
         <label class="account-field"><span>{{ __('account::auth.fields.name') }}</span>
-            <input type="text" name="name" value="{{ old('name', $user->getAttribute('name')) }}" required maxlength="120" autocomplete="name">
+            <input type="text" name="name" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'name']) value="{{ old('name', $user->getAttribute('name')) }}" required maxlength="120" autocomplete="name">
             @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'name'])
         </label>
         <label class="account-field"><span>{{ __('account::auth.fields.email') }}</span>
-            <input type="email" name="email" value="{{ old('email', $user->getAttribute('email')) }}" required maxlength="190" autocomplete="email">
+            <input type="email" name="email" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'email']) value="{{ old('email', $user->getAttribute('email')) }}" required maxlength="190" autocomplete="email">
             @if ($user->getAttribute('email_verified_at') === null)
                 <small class="account-field__help">{{ __('account::account.profile.unverified') }}</small>
             @endif
@@ -22,14 +22,14 @@
         </label>
         @if ($profile->password_set)
             <label class="account-field"><span>{{ __('account::account.profile.current_password') }}</span>
-                <input type="password" name="current_password" autocomplete="current-password">
+                <input type="password" name="current_password" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'current_password']) autocomplete="current-password">
                 <small class="account-field__help">{{ __('account::account.profile.current_password_help') }}</small>
                 @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'current_password'])
             </label>
         @endif
         @if ($phone !== 'off')
             <label class="account-field"><span>{{ __('account::auth.fields.phone') }}</span>
-                <input type="tel" name="phone" value="{{ old('phone', $profile->phone) }}" maxlength="30" autocomplete="tel" @required($phone === 'required')>
+                <input type="tel" name="phone" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'phone']) value="{{ old('phone', $profile->phone) }}" maxlength="30" autocomplete="tel" @required($phone === 'required')>
                 @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'phone'])
             </label>
         @endif
@@ -45,12 +45,12 @@
         @csrf @method('PUT')
         @if ($profile->password_set)
             <label class="account-field"><span>{{ __('account::account.profile.current_password') }}</span>
-                <input type="password" name="current_password" required autocomplete="current-password">
+                <input type="password" name="current_password" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'current_password', 'bag' => 'password']) required autocomplete="current-password">
                 @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'current_password', 'bag' => 'password'])
             </label>
         @endif
         <label class="account-field"><span>{{ __('account::auth.fields.new_password') }}</span>
-            <input type="password" name="password" required autocomplete="new-password">
+            <input type="password" name="password" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'password', 'bag' => 'password']) required autocomplete="new-password">
             @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'password', 'bag' => 'password'])
         </label>
         <label class="account-field"><span>{{ __('account::auth.fields.password_confirmation') }}</span>
@@ -67,7 +67,7 @@
             <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.profile.delete') }}" class="account-form account-form--delete">
                 @csrf
                 <p>{{ __('account::account.delete.intro') }}</p>
-                <label class="account-check"><input type="checkbox" name="confirm" value="1" required> {{ __('account::account.delete.confirm') }}</label>
+                <label class="account-check"><input type="checkbox" name="confirm" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'confirm']) value="1" required> {{ __('account::account.delete.confirm') }}</label>
                 @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'confirm'])
                 <button type="submit" class="account-button account-button--danger">{{ __('account::account.delete.submit') }}</button>
             </form>

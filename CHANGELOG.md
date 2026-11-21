@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- **Accessibility**: a field's error is tied to its input (`aria-invalid`, `aria-describedby`;
+  `partials.aria`), and a form's errors are announced once, by a summary above it, instead of one
+  alert each. `/account` marks its menu item current. Input borders have enough contrast (3:1) in
+  light and dark, a field with an error has a red border, and links and buttons show a focus ring.
+  The announcement's title is no longer a heading before the page's own. Plugins' checkbox fields
+  show their help and errors; their selects' empty option says "Choose…".
+- **Settings → Accounts**: staff emails go only to roles that open the admin (the super admin's,
+  and roles with `sunrice.access`); a customer role ticked there would have emailed every account
+  on every sign-up. At most 100 people get one, by the panel guard's roles. The account address
+  can't be one where the app already has pages; help texts show the addresses as they are now
+  (and Google's callback address); changing the address warns that Google's callback changes; the
+  verification help says codes and Google prove an address too; an announcement needs a message.
 - **No more clashes with the app** (breaking, before 1.0):
   - Route names are `sunrice.account.*` (were `account.*`, which took over an app's own
     `account.login`, `account.profile`… while its `/account/*` URLs still won): use

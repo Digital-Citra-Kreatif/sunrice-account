@@ -10,7 +10,9 @@ return [
         'password' => 'Kata sandi',
         'new_password' => 'Kata sandi baru',
         'password_confirmation' => 'Ulangi kata sandi',
+        'choose' => 'Pilih…',
     ],
+    'check_fields' => 'Beberapa isian perlu diperiksa lagi: lihat pesan di dekat isian.',
     'login' => [
         'title' => 'Masuk',
         'remember' => 'Biarkan saya tetap masuk',
