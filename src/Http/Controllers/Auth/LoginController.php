@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Sunrice\Account\Auth\Actions\AuthenticateAccount;
 use Sunrice\Account\Auth\Actions\SignOut;
+use Sunrice\Account\Auth\Google;
+use Sunrice\Account\Auth\LoginCodes;
 use Sunrice\Account\Auth\Throttle;
 use Sunrice\Account\Settings\AccountSettings;
 use Sunrice\Account\View\Layout;
@@ -24,6 +26,8 @@ final class LoginController
             'seoTitle' => __('account::auth.login.title'),
             'captcha' => app(Captcha::class)->widget(app()->getLocale()),
             'registration' => app(AccountSettings::class)->boolean('general.registration', true),
+            'codes' => app(LoginCodes::class)->available(),
+            'google' => Google::available(),
         ]);
     }
 

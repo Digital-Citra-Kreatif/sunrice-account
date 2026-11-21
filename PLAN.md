@@ -12,7 +12,7 @@ sunrice-commerce's customer accounts. Commerce today has all of this built in
 | Package | `sunrice/account`, namespace `Sunrice\Account\`, plugin id `account`, requires `sunrice/admin` and `sunrice/cms` ^0.8 |
 | Guard | `account` session guard, on the panel guard's user provider. Same users table, separate session |
 | Default role | `member`, no admin permissions, seeded by `sunrice:roles`. Commerce adds `customer` |
-| Sign-in methods | Password, emailed one-time code (spatie/laravel-one-time-passwords) and Google (laravel/socialite), the last two optional and off by default |
+| Sign-in methods | Password, emailed one-time code (spatie/laravel-one-time-passwords: the user model uses its `HasOneTimePasswords` trait; the panel's two-factor login moves onto it too) and Google (laravel/socialite), the last two optional and off by default |
 | Account URL | In config (`paths`), overridable in the settings page. Routes read it when they're registered; saving it clears the route cache |
 | Admin | Administration → Accounts (list, roles, reset link, mark verified, deletion requests, anonymize). Commerce's Shop → Customers extends it |
 | Plugin data | Plugins add pages, dashboard cards, profile and registration fields (stored in `account_profiles.meta`) and listen to events |
@@ -59,7 +59,7 @@ sunrice-commerce's customer accounts. Commerce today has all of this built in
 5. **Emails** ✅: registry, on/off switches (verify and reset can't be switched off), staff
    recipients by address and role, subject per language, publishable templates with the panel's
    mail brand, queued. Welcome, verify, reset, and to staff: new registration and deletion request.
-6. **Sign in with a code and with Google**: moved from commerce, optional, off by default.
+6. **Sign in with a code and with Google** ✅: moved from commerce, optional, off by default.
 7. **My Account**: menu, dashboard and cards, landing hook, profile (name, email, phone, marketing
    consent), password, deletion request, announcement; registration and profile fields; events.
 8. **Settings page**: Settings → Accounts from the section registry (general, sign-in, emails,

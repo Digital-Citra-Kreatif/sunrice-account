@@ -66,3 +66,16 @@
   - New: the welcome email (at registration while emails aren't verified, else once verified) and
     the staff email of a new account (to the chosen roles' users and addresses, each once, in the
     site's main language).
+- Sign in with an emailed code (`general.login_code`, off by default), with
+  `spatie/laravel-one-time-passwords`: the user model needs its `HasOneTimePasswords` trait, and its
+  `one_time_passwords` migration (`php artisan vendor:publish --tag=one-time-passwords-migrations`).
+  6 digits, valid for `general.code_minutes` (10), once, from the browser that asked, 5 tries a
+  minute per account plus 10 per 10 minutes per email and IP; one code a minute per email; the same
+  answer for any email. A code verifies the email. `LoginCodes`, email `account_login_code` (locked).
+- Sign in with Google (`general.google_login`, off by default; `laravel/socialite`, credentials
+  from `services.google` or `sunrice-account.google`): a linked account signs in; a verified
+  Google email links the account that has it; otherwise an account is created (verified, default
+  roles, `password_set` false) while registration is open. Links in `account_social_accounts`.
+  Callback `/account/login/google/callback` (`account.google.callback`).
+- Staff while the site shares the admin's guard, and locked accounts, can't sign in by code or
+  Google. `SignedIn::$method` is `code` or `google` for them.

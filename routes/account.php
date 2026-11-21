@@ -36,6 +36,10 @@ Route::middleware(RedirectIfAuthenticated::class)->group(function () use ($suffi
     Route::post($forgot, [Auth\ForgotPasswordController::class, 'store'])->middleware(ProtectAgainstSpam::class)->name('account.password.email'.$suffix);
     Route::get($reset.'/{token}', [Auth\ResetPasswordController::class, 'show'])->name('account.password.reset'.$suffix);
     Route::post($reset, [Auth\ResetPasswordController::class, 'store'])->name('account.password.update'.$suffix);
+    Route::post($login.'/code', [Auth\LoginCodeController::class, 'send'])->middleware(ProtectAgainstSpam::class)->name('account.code.send'.$suffix);
+    Route::get($login.'/code', [Auth\LoginCodeController::class, 'show'])->name('account.code'.$suffix);
+    Route::post($login.'/code/check', [Auth\LoginCodeController::class, 'consume'])->name('account.code.consume'.$suffix);
+    Route::get($login.'/google', [Auth\GoogleController::class, 'redirect'])->name('account.google'.$suffix);
     Route::get($verify, [Auth\VerificationController::class, 'show'])->name('account.verification.notice'.$suffix);
     Route::post($verify, [Auth\VerificationController::class, 'send'])->middleware(ProtectAgainstSpam::class)->name('account.verification.send'.$suffix);
 });

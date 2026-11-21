@@ -47,6 +47,9 @@ Plugins built on accounts keep their own sections in the same row, under their o
 | `general.marketing_consent` | `true` | Offer the "news and offers" checkbox at registration |
 | `general.terms_url` | `null` | A terms page to agree to at registration |
 | `general.redirect_after_login` | `null` | A site path to go to after signing in (else My Account) |
+| `general.login_code` | `false` | Offer sign-in with an emailed code |
+| `general.code_minutes` | `10` | How long a sign-in code works (1–60 minutes) |
+| `general.google_login` | `false` | Offer sign-in with Google (needs the credentials) |
 
 ## Profiles
 
@@ -153,6 +156,43 @@ What protects them:
 
 New accounts get the default roles (`general.default_roles`) and a profile with their phone,
 language and marketing consent.
+
+### Sign in with a code or with Google
+
+**Emailed code** (`general.login_code`): the sign-in page offers "Email me a sign-in code". It
+uses [spatie/laravel-one-time-passwords](https://github.com/spatie/laravel-one-time-passwords), so
+before turning it on:
+
+- add its trait to your user model:
+
+  ```php
+  use Spatie\OneTimePasswords\Models\Concerns\HasOneTimePasswords;
+
+  class User extends Authenticatable
+  {
+      use HasOneTimePasswords, HasRoles, Notifiable;
+  }
+  ```
+
+- publish and run its migration: `php artisan vendor:publish --tag=one-time-passwords-migrations`,
+  then `php artisan migrate`.
+
+The code has 6 digits, works for `general.code_minutes` minutes, once, and only in the browser
+that asked for it; 5 tries a minute per account, and 10 per 10 minutes per email and IP. Asking
+again replaces it (at most once a minute). Any email gets the same answer. A code proves the email,
+so it verifies an unverified one. Codes go out as the `account_login_code` account email, not the
+package's own notification, and sign in on the account guard only.
+
+**Google** (`general.google_login`): set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (or
+`services.google`) and give Google the callback URL `https://your-site/account/login/google/callback`.
+
+- An account linked to the Google user signs in (even if its email changed since).
+- Else, a Google-verified email links the account that has it.
+- Else, while registration is open, a new account is created: verified, with the default roles,
+  welcomed, and staff are told.
+
+Links are kept in `account_social_accounts`. Staff while the site shares the admin's guard, and
+locked accounts, can't sign in either way.
 
 ### Email verification
 

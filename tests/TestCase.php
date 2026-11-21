@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Sunrice\Account\Tests;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Socialite\SocialiteServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Spatie\Honeypot\HoneypotServiceProvider;
+use Spatie\OneTimePasswords\OneTimePasswordsServiceProvider;
 use Sunrice\Account\AccountServiceProvider;
 use Sunrice\Admin\AdminServiceProvider;
 use Sunrice\Cms\CmsServiceProvider;
@@ -23,6 +25,8 @@ class TestCase extends Orchestra
             AdminServiceProvider::class,
             CmsServiceProvider::class,
             HoneypotServiceProvider::class,
+            SocialiteServiceProvider::class,
+            OneTimePasswordsServiceProvider::class,
             AccountServiceProvider::class,
             AdminPanelProvider::class,
         ];

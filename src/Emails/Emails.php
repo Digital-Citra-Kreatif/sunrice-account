@@ -21,6 +21,8 @@ final class Emails
 
     public const EXISTING = 'account_existing';
 
+    public const LOGIN_CODE = 'account_login_code';
+
     public const STAFF_REGISTRATION = 'account_staff_registration';
 
     /** @var array<string, EmailDefinition> */
@@ -33,6 +35,7 @@ final class Emails
             new EmailDefinition(self::VERIFY, 'Verify email', 'account::auth.verify.mail', locked: true, description: 'The link that verifies a new account\'s email address.'),
             new EmailDefinition(self::RESET, 'Password reset', 'account::auth.reset.mail', locked: true, description: 'The link to choose a new password.'),
             new EmailDefinition(self::EXISTING, 'Account already exists', 'account::auth.register.existing', locked: true, description: 'When someone tries to register with an email that has an account.'),
+            new EmailDefinition(self::LOGIN_CODE, 'Sign-in code', 'account::auth.code.mail', locked: true, description: 'A code to sign in with (while sign-in by code is on).'),
             new EmailDefinition(self::STAFF_REGISTRATION, 'New account', 'account::emails.staff_registration', 'staff', description: 'To staff: someone created an account.'),
         );
     }

@@ -6,6 +6,7 @@ namespace Sunrice\Account\Routing;
 
 use Closure;
 use Illuminate\Support\Facades\Route;
+use Sunrice\Account\Http\Controllers\Auth\GoogleController;
 use Sunrice\Account\Http\Controllers\Auth\VerificationController;
 use Sunrice\Account\Http\Middleware\Authenticate;
 use Sunrice\Account\Http\Middleware\ForgetLocaleParameter;
@@ -126,6 +127,10 @@ final class AccountRoutes
         Route::middleware(['web', NoIndex::class])->prefix(self::prefix())
             ->get(self::path('verify').'/{id}/{hash}', [VerificationController::class, 'verify'])
             ->whereNumber('id')->name('account.verify');
+        // Google's callback: one fixed address (the one given to Google), its language from the session.
+        Route::middleware(['web', NoIndex::class])->prefix(self::prefix())
+            ->get(self::path('login').'/google/callback', [GoogleController::class, 'callback'])
+            ->name('account.google.callback');
     }
 
     /** @param  list<array{routes: Closure(string): void, signedIn: bool}>  $extensions */
