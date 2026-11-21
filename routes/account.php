@@ -36,7 +36,7 @@ Route::middleware(RedirectIfAuthenticated::class)->group(function () use ($suffi
     $verify = AccountRoutes::path('verify');
 
     Route::get($login, [Auth\LoginController::class, 'show'])->name('account.login'.$suffix);
-    Route::post($login, [Auth\LoginController::class, 'store'])->middleware(ProtectAgainstSpam::class)->name('account.login.attempt'.$suffix);
+    Route::post($login, [Auth\LoginController::class, 'store'])->name('account.login.attempt'.$suffix);
     Route::get($register, [Auth\RegisterController::class, 'show'])->name('account.register'.$suffix);
     Route::post($register, [Auth\RegisterController::class, 'store'])->middleware(ProtectAgainstSpam::class)->name('account.register.store'.$suffix);
     Route::get($forgot, [Auth\ForgotPasswordController::class, 'show'])->name('account.password.request'.$suffix);

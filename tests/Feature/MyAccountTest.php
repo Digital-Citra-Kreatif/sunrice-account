@@ -68,11 +68,11 @@ it('shows the announcement as the first page, or above the pages', function () {
     $this->get('/en/account/announcement')->assertSee('Holiday')->assertSee('Toko tutup.');
 
     accountSettings(['announcementPosition' => 'above']);
-    $this->get('/account')->assertOk()->assertSee('account-announcement', false);
+    $this->get('/account')->assertOk()->assertSee('class="account-announcement"', false);
     $this->get('/account/announcement')->assertNotFound();
 
     accountSettings(['announcement' => false]);
-    $this->get('/account')->assertDontSee('account-announcement', false);
+    $this->get('/account')->assertDontSee('class="account-announcement"', false);
 });
 
 it('escapes the announcement', function () {

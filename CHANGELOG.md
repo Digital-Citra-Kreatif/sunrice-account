@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- The package's own site layout (for a site without one) styles the account pages: plain, light
+  and dark, phone-friendly CSS for the `account-*` classes, inline with the site's CSP nonce. A
+  site's own layout styles them itself.
+- Password sign-in has no honeypot any more: password managers fill and send it at once, which
+  the honeypot's timing took for a bot (a blank page). It's throttled per email and IP; the forms
+  that send email (register, forgot password, sign-in code, verification) keep the honeypot.
 - The package: `sunrice/account`, a Sunrice plugin (`AccountPlugin`, id `account`, after the CMS).
   - The site's own session guard, `account` (`sunrice-account.auth.guard`), defined on the user
     provider of the panel's guard unless `config/auth.php` defines it.

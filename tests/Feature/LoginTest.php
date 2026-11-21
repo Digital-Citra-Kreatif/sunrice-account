@@ -132,3 +132,11 @@ it('signs out of the site only, keeping the admin session', function () {
     $this->assertAuthenticated('web');
     Event::assertDispatched(SignedOut::class);
 });
+
+it('takes a sign-in sent at once, as password managers send it (no honeypot timing)', function () {
+    config(['honeypot.enabled' => true, 'honeypot.valid_from_timestamp' => true, 'honeypot.amount_of_seconds' => 5]);
+    siteUser();
+
+    $this->post('/account/login', ['email' => 'ana@example.com', 'password' => 'secret-pass'])->assertRedirect('/account');
+    $this->assertAuthenticated('account');
+});

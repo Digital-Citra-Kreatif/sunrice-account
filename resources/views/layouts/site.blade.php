@@ -8,6 +8,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <x-sunrice-cms::seo :default-title="$seoTitle ?? null" :noindex="(bool) request()->attributes->get(\Sunrice\Account\Http\Middleware\NoIndex::ATTRIBUTE)" />
+    @include(\Sunrice\Account\View\Layout::view('partials.styles'))
     @stack('head')
     <x-sunrice-cms::code place="head" />
 </head>

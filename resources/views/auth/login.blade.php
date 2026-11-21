@@ -8,8 +8,9 @@
     <section class="account-auth">
         <h1 class="account-auth__title">{{ __('account::auth.login.title') }}</h1>
         @include(\Sunrice\Account\View\Layout::view('partials.messages'))
+        {{-- No honeypot here: password managers fill and send sign-in forms at once, and sign-in is throttled. --}}
         <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.login.attempt') }}" class="account-form">
-            @csrf <x-honeypot />
+            @csrf
             <label class="account-field"><span>{{ __('account::auth.fields.email') }}</span>
                 <input type="email" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
                 @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'email'])
