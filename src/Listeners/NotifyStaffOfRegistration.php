@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Sunrice\Account\Listeners;
 
 use Illuminate\Support\Facades\Notification;
-use Sunrice\Account\Emails\EmailSettings;
 use Sunrice\Account\Emails\Emails;
+use Sunrice\Account\Emails\EmailSettings;
 use Sunrice\Account\Events\Registered;
 use Sunrice\Account\Notifications\NewRegistrationNotification;
+use Sunrice\Account\Support\Input;
 use Sunrice\Cms\Support\Locales;
 
 /**
@@ -26,19 +27,18 @@ final class NotifyStaffOfRegistration
         if (! $this->settings->enabled(Emails::STAFF_REGISTRATION)) {
             return;
         }
-        $name = $event->data['name'] ?? '';
-        $email = $event->data['email'] ?? '';
-        $notification = new NewRegistrationNotification(is_string($name) ? $name : '', is_string($email) ? $email : '', Locales::default());
+        $notification = new NewRegistrationNotification(Input::string($event->data, 'name'), Input::string($event->data, 'email'), Locales::default());
 
         $staff = $this->settings->staff(Emails::STAFF_REGISTRATION);
+        $known = [];
+        foreach ($staff as $user) {
+            $email = $user->getAttribute('email');
+            $known[] = is_string($email) ? mb_strtolower($email) : '';
+        }
         if ($staff->isNotEmpty()) {
             Notification::send($staff, $notification);
         }
-        $known = $staff->map(function ($user): string {
-            $email = $user->getAttribute('email');
 
-            return is_string($email) ? mb_strtolower($email) : '';
-        })->all();
         $addresses = array_values(array_diff($this->settings->addresses(Emails::STAFF_REGISTRATION), $known));
         if ($addresses !== []) {
             Notification::route('mail', $addresses)->notify($notification);
