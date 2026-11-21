@@ -49,7 +49,7 @@ sunrice-commerce's customer accounts. Commerce today has all of this built in
 
 1. **Skeleton** ✅: plugin, service provider, config, `account` guard, settings storage, profiles
    table, permissions and the `member` role, Testbench workbench, Pint, Larastan max, CI, docs.
-2. **Routes and layout**: routes in every site language (`/account`, `/en/account`), configurable
+2. **Routes and layout** ✅: routes in every site language (`/account`, `/en/account`), configurable
    paths, `account.auth` / `account.guest` middleware, layout lookup (`cms.layout`, then the app's
    `resources/views/account/*`, then the package's), page cache skip, `noindex`.
 3. **Sign-in flows**: login, logout, register, forgot and reset password; throttling (per email +
