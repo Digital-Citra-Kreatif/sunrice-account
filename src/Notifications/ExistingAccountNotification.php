@@ -24,8 +24,8 @@ final class ExistingAccountNotification extends AccountEmail
     {
         return $mail
             ->line($this->text('intro'))
-            ->action($this->text('action'), AccountRoutes::url('account.login', [], $this->lang))
-            ->line($this->text('forgot', ['url' => AccountRoutes::url('account.password.request', [], $this->lang)]))
+            ->action($this->text('action'), AccountRoutes::url('sunrice.account.login', [], $this->lang))
+            ->line($this->text('forgot', ['url' => AccountRoutes::url('sunrice.account.password.request', [], $this->lang)]))
             ->line($this->text('ignore'));
     }
 }

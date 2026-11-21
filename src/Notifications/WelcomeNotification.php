@@ -22,7 +22,7 @@ final class WelcomeNotification extends AccountEmail
     {
         $name = $notifiable instanceof Model ? $notifiable->getAttribute('name') : null;
 
-        return ['name' => is_string($name) ? $name : '', 'url' => AccountRoutes::url('account.dashboard', [], $this->lang)];
+        return ['name' => is_string($name) ? $name : '', 'url' => AccountRoutes::url('sunrice.account.dashboard', [], $this->lang)];
     }
 
     protected function build(MailMessage $mail, mixed $notifiable): MailMessage

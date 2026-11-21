@@ -26,7 +26,7 @@ final class AccountPageCache
     public static function skips(Request $request): bool
     {
         $route = $request->route();
-        if ($route instanceof Route && str_starts_with((string) $route->getName(), 'account.')) {
+        if ($route instanceof Route && str_starts_with((string) $route->getName(), 'sunrice.account.')) {
             return true;
         }
         [, $path] = Locales::split($request->path());

@@ -4,13 +4,14 @@
     $verifyEmail, $adminLogin (the admin's sign-in, while the site shares its guard; else null).
 --}}
 @extends(\Sunrice\Account\View\Layout::site())
+@include(\Sunrice\Account\View\Layout::view('partials.push-styles'))
 
 @section('content')
     <section class="account-auth">
         <h1 class="account-auth__title">{{ __('account::auth.login.title') }}</h1>
         @include(\Sunrice\Account\View\Layout::view('partials.messages'))
         {{-- No honeypot here: password managers fill and send sign-in forms at once, and sign-in is throttled. --}}
-        <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.login.attempt') }}" class="account-form">
+        <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.login.attempt') }}" class="account-form">
             @csrf
             <label class="account-field"><span>{{ __('account::auth.fields.email') }}</span>
                 <input type="email" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
@@ -28,22 +29,22 @@
             @if ($codes)
                 <p class="account-auth__or">{{ __('account::auth.login.or') }}</p>
                 {{-- The same email, without the password. --}}
-                <button type="submit" class="account-button" formaction="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.code.send') }}" formnovalidate>{{ __('account::auth.login.with_code') }}</button>
+                <button type="submit" class="account-button" formaction="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.code.send') }}" formnovalidate>{{ __('account::auth.login.with_code') }}</button>
             @endif
-            <a class="account-auth__link" href="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.password.request') }}">{{ __('account::auth.login.forgot') }}</a>
+            <a class="account-auth__link" href="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.password.request') }}">{{ __('account::auth.login.forgot') }}</a>
             @if ($verifyEmail)
-                <a class="account-auth__link" href="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.verification.notice') }}">{{ __('account::auth.login.no_link') }}</a>
+                <a class="account-auth__link" href="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.verification.notice') }}">{{ __('account::auth.login.no_link') }}</a>
             @endif
         </form>
         @if ($google)
             @unless ($codes)
                 <p class="account-auth__or">{{ __('account::auth.login.or') }}</p>
             @endunless
-            <a class="account-button account-button--google" href="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.google') }}">{{ __('account::auth.login.with_google') }}</a>
+            <a class="account-button account-button--google" href="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.google') }}">{{ __('account::auth.login.with_google') }}</a>
         @endif
         @if ($registration)
             <p class="account-auth__alt">{{ __('account::auth.login.no_account') }}
-                <a href="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.register') }}">{{ __('account::auth.login.register') }}</a></p>
+                <a href="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.register') }}">{{ __('account::auth.login.register') }}</a></p>
         @endif
     </section>
 @endsection

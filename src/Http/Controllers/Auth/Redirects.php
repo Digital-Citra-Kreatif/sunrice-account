@@ -28,7 +28,7 @@ final class Redirects
             return url(Locales::prefix(app()->getLocale()).'/'.$path);
         }
 
-        return AccountRoutes::url('account.dashboard');
+        return AccountRoutes::url('sunrice.account.dashboard');
     }
 
     /** The home page in the current language. */

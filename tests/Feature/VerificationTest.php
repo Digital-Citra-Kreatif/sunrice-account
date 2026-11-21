@@ -47,7 +47,7 @@ it('refuses a link that was changed, expired or sent to another email', function
 
     // Each goes to the page asking for a new link, with why.
     $this->get($url.'x')->assertRedirect('http://localhost/account/verify')->assertSessionHas('account.error');
-    $this->get(URL::temporarySignedRoute('account.verify', now()->subMinute(), ['id' => $user->id, 'hash' => Verification::hash($user), 'lang' => 'id']))->assertRedirect('http://localhost/account/verify');
+    $this->get(URL::temporarySignedRoute('sunrice.account.verify', now()->subMinute(), ['id' => $user->id, 'hash' => Verification::hash($user), 'lang' => 'id']))->assertRedirect('http://localhost/account/verify');
     $user->forceFill(['email' => 'new@example.com'])->save();
     $this->get($url)->assertRedirect('http://localhost/account/verify');
 
@@ -97,7 +97,7 @@ it('slows down repeated requests for a link', function () {
 
 it('keeps unverified accounts out of pages that need a verified email', function () {
     Account::routes(function (string $suffix): void {
-        Route::get('checkout', fn () => 'checkout')->middleware('account.verified')->name('test.checkout'.$suffix);
+        Route::get('checkout', fn () => 'checkout')->middleware('sunrice.account.verified')->name('test.checkout'.$suffix);
     });
 
     $this->actingAs(siteUser(['email_verified_at' => null]), 'account');

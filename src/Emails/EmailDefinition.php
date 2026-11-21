@@ -14,7 +14,7 @@ use Closure;
  * gives its settings with `$settings` (from wherever the plugin keeps
  * them), else it's on (unless `$enabledByDefault` is false) with its
  * default subject. Its body can be replaced by the app's
- * resources/views/account/emails/{key}.blade.php.
+ * resources/views/vendor/account/emails/{key}.blade.php.
  *
  * @api
  */

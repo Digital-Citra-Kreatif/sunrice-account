@@ -10,6 +10,7 @@
     The current menu item is the one whose route matches the page's.
 --}}
 @extends(\Sunrice\Account\View\Layout::site())
+@include(\Sunrice\Account\View\Layout::view('partials.push-styles'))
 @php($accountNavigation = app(\Sunrice\Account\MyAccount\Navigation::class)->items())
 @php($accountAnnouncement = app(\Sunrice\Account\MyAccount\Announcement::class))
 @php($accountAnnouncementPosition = $accountAnnouncement->position())

@@ -8,7 +8,7 @@
             </li>
         @endforeach
     </ul>
-    <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.logout') }}" class="account-nav__signout">
+    <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.logout') }}" class="account-nav__signout">
         @csrf
         <button type="submit" class="account-link">{{ __('account::auth.logout') }}</button>
     </form>

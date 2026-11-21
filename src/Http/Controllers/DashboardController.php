@@ -27,7 +27,7 @@ final class DashboardController
             return redirect()->to($landing);
         }
         if ($announcement->position() === 'tab') {
-            return redirect()->to(AccountRoutes::url('account.announcement'));
+            return redirect()->to(AccountRoutes::url('sunrice.account.announcement'));
         }
 
         return $this->overview($dashboard);

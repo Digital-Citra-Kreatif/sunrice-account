@@ -62,7 +62,7 @@ final class AccountRoutes
 
     /**
      * An account URL in the current (or given) language:
-     * AccountRoutes::url('account.dashboard').
+     * AccountRoutes::url('sunrice.account.dashboard').
      *
      * @param  array<string, mixed>  $parameters
      */
@@ -95,7 +95,7 @@ final class AccountRoutes
 
     /**
      * Pages under the account prefix, in every language: signed-in pages
-     * (`account.auth`) unless $signedIn is false. Before the app has
+     * (`sunrice.account.auth`) unless $signedIn is false. Before the app has
      * booted they are added with the package's own; after, at once.
      *
      * @param  Closure(string): void  $routes  receives the route-name suffix
@@ -126,11 +126,11 @@ final class AccountRoutes
         // The verification link: one fixed address (signed), its language in ?lang=.
         Route::middleware(['web', NoIndex::class])->prefix(self::prefix())
             ->get(self::path('verify').'/{id}/{hash}', [VerificationController::class, 'verify'])
-            ->whereNumber('id')->name('account.verify');
+            ->whereNumber('id')->name('sunrice.account.verify');
         // Google's callback: one fixed address (the one given to Google), its language from the session.
         Route::middleware(['web', NoIndex::class])->prefix(self::prefix())
             ->get(self::path('login').'/google/callback', [GoogleController::class, 'callback'])
-            ->name('account.google.callback');
+            ->name('sunrice.account.google.callback');
     }
 
     /** @param  list<array{routes: Closure(string): void, signedIn: bool}>  $extensions */

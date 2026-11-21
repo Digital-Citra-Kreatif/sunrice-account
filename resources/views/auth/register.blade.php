@@ -3,12 +3,13 @@
     $termsUrl (a terms page to agree to, or ''), $captcha (the widget, empty when off).
 --}}
 @extends(\Sunrice\Account\View\Layout::site())
+@include(\Sunrice\Account\View\Layout::view('partials.push-styles'))
 
 @section('content')
     <section class="account-auth">
         <h1 class="account-auth__title">{{ __('account::auth.register.title') }}</h1>
         @include(\Sunrice\Account\View\Layout::view('partials.messages'))
-        <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.register.store') }}" class="account-form">
+        <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.register.store') }}" class="account-form">
             @csrf <x-honeypot />
             <label class="account-field"><span>{{ __('account::auth.fields.name') }}</span>
                 <input type="text" name="name" value="{{ old('name') }}" required maxlength="120" autocomplete="name">
@@ -44,6 +45,6 @@
             <button type="submit" class="account-button account-button--primary">{{ __('account::auth.register.submit') }}</button>
         </form>
         <p class="account-auth__alt">{{ __('account::auth.register.have_account') }}
-            <a href="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.login') }}">{{ __('account::auth.register.login') }}</a></p>
+            <a href="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.login') }}">{{ __('account::auth.register.login') }}</a></p>
     </section>
 @endsection

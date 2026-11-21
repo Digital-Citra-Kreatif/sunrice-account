@@ -147,7 +147,7 @@ it('sends a guest from a plugin\'s page to sign in, and back', function () {
     Route::middleware('web')->get('/members-only', fn () => Account::redirectToSignIn());
     siteUser();
 
-    $this->get('/members-only?page=2')->assertRedirect(Account::url('account.login'));
+    $this->get('/members-only?page=2')->assertRedirect(Account::url('sunrice.account.login'));
     $this->post('/account/login', ['email' => 'ana@example.com', 'password' => 'secret-pass'])->assertRedirect('http://localhost/members-only?page=2');
 });
 

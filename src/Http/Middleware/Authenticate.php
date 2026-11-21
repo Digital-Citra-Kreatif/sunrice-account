@@ -13,7 +13,7 @@ use Sunrice\Admin\Security\AccountGuard;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * `account.auth`: signed-in accounts only. Guests go to the sign-in page
+ * `sunrice.account.auth`: signed-in accounts only. Guests go to the sign-in page
  * and come back to where they were going. A session of a locked account,
  * or one that signed in before the account was signed out everywhere (a
  * password change or reset does that too), is signed out.
@@ -41,15 +41,15 @@ final class Authenticate
                 abort(401);
             }
 
-            return redirect(AccountRoutes::url('account.login'))->with('account.status', __('account::auth.login.signed_out'));
+            return redirect(AccountRoutes::url('sunrice.account.login'))->with('account.status', __('account::auth.login.signed_out'));
         }
-        if ($request->expectsJson() || ! Route::has('account.login')) {
+        if ($request->expectsJson() || ! Route::has('sunrice.account.login')) {
             abort(401);
         }
         if ($request->isMethod('GET')) {
             $request->session()->put(self::INTENDED, $request->fullUrl());
         }
 
-        return redirect(AccountRoutes::url('account.login'));
+        return redirect(AccountRoutes::url('sunrice.account.login'));
     }
 }

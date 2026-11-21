@@ -7,7 +7,7 @@
 @section('account')
     <h1 class="account__title">{{ __('account::account.profile.title') }}</h1>
 
-    <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.profile.update') }}" class="account-form account-form--profile">
+    <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.profile.update') }}" class="account-form account-form--profile">
         @csrf @method('PUT')
         <label class="account-field"><span>{{ __('account::auth.fields.name') }}</span>
             <input type="text" name="name" value="{{ old('name', $user->getAttribute('name')) }}" required maxlength="120" autocomplete="name">
@@ -41,7 +41,7 @@
     </form>
 
     <h2 class="account__subtitle">{{ __($profile->password_set ? 'account::account.password.title' : 'account::account.password.set_title') }}</h2>
-    <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.profile.password') }}" class="account-form account-form--password">
+    <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.profile.password') }}" class="account-form account-form--password">
         @csrf @method('PUT')
         @if ($profile->password_set)
             <label class="account-field"><span>{{ __('account::account.profile.current_password') }}</span>
@@ -64,7 +64,7 @@
         @if ($profile->deletion_requested_at !== null)
             <p>{{ __('account::account.delete.pending', ['date' => $profile->deletion_requested_at->isoFormat('LL')]) }}</p>
         @else
-            <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('account.profile.delete') }}" class="account-form account-form--delete">
+            <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.profile.delete') }}" class="account-form account-form--delete">
                 @csrf
                 <p>{{ __('account::account.delete.intro') }}</p>
                 <label class="account-check"><input type="checkbox" name="confirm" value="1" required> {{ __('account::account.delete.confirm') }}</label>

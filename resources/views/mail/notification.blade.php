@@ -1,7 +1,7 @@
 {{--
     The account emails' markdown template: Laravel's notification email, with the site's brand
     (Panel::mailBrand(): its logo, else its name) at the top and its name in the footer.
-    An app replaces one email's body with resources/views/account/emails/{key}.blade.php.
+    An app replaces one email's body with resources/views/vendor/account/emails/{key}.blade.php.
 --}}
 @php($accountBrand = app(\Sunrice\Admin\Panel::class)->mailBrand())
 <x-mail::layout>

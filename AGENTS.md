@@ -29,7 +29,8 @@ scope, structure and order; read it before starting a task.
 - Config `config/sunrice-account.php` (key `sunrice-account`); views `account::`; translations
   `account::`; tables prefixed `account_`.
 - Permissions `account.<area>.<action>`; admin route names `sunrice.admin.account.<area>.<action>`;
-  site route names `account.<name>` (+ `.locale` for the other languages).
+  site route names `sunrice.account.<name>` (+ `.locale` for the other languages); middleware
+  aliases `sunrice.account.*`; views overridden in `resources/views/vendor/account`.
 - Write operations live in single-purpose action classes `src/<Area>/Actions/` with a public
   `handle()`. Controllers stay thin.
 - Settings live in `AccountSettings` (one `account` row in the panel's settings table over

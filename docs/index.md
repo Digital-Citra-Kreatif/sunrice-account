@@ -109,12 +109,13 @@ plugin checks to let only some accounts in.
 
 Account pages live under the account prefix: `/account` (`sunrice-account.paths.prefix`, or Settings
 → Accounts' `path`), in every language of the site, like the CMS's pages: `/account`
-in the language at the plain addresses, `/en/account` in English. Route names are `account.*`,
+in the language at the plain addresses, `/en/account` in English. Route names are `sunrice.account.*`
+(prefixed, so they never take over an app's own `account.*` routes),
 with `.locale` for the other languages, so build addresses with `Account::url()`:
 
 ```php
-Account::url('account.dashboard');                 // in the current language
-Account::url('account.dashboard', locale: 'en');   // http://example.test/en/account
+Account::url('sunrice.account.dashboard');                 // in the current language
+Account::url('sunrice.account.dashboard', locale: 'en');   // http://example.test/en/account
 ```
 
 Add your plugin's pages under the prefix with `Account::routes()`, from your service provider or
@@ -135,10 +136,10 @@ same languages, and the middleware:
 
 | Middleware | |
 | --- | --- |
-| `account.auth` | Signed-in accounts only. Guests go to the sign-in page (`account.login`) and come back |
-| `account.guest` | Guests only (sign in, register); signed-in accounts go to My Account |
-| `account.noindex` | `X-Robots-Tag: noindex`, `Cache-Control: private, no-store`, and the layout's robots tag |
-| `account.verified` | After `account.auth`: a verified email while verification is required; others are sent a link and the verify page, which says where it went and can send it again |
+| `sunrice.account.auth` | Signed-in accounts only. Guests go to the sign-in page (`sunrice.account.login`) and come back |
+| `sunrice.account.guest` | Guests only (sign in, register); signed-in accounts go to My Account |
+| `sunrice.account.noindex` | `X-Robots-Tag: noindex`, `Cache-Control: private, no-store`, and the layout's robots tag |
+| `sunrice.account.verified` | After `sunrice.account.auth`: a verified email while verification is required; others are sent a link and the verify page, which says where it went and can send it again |
 
 To send a guest to sign in from a page of your own (a members-only page), return
 `Account::redirectToSignIn()`: once signed in they come back to the page they asked for (or to the
@@ -165,19 +166,25 @@ The signed-in area's own layout is `account::layout`; your pages extend it and f
 @endsection
 ```
 
+The pages push the package's CSS (plain, light and dark, for the `account-*` classes) to the
+layout's `head` stack, once: give your layout `@stack('head')`. A theme that styles the account
+pages itself turns it off with `sunrice-account.styles` (`SUNRICE_ACCOUNT_STYLES=false`); your own
+pages under the account prefix can `@include(Layout::view('partials.push-styles'))` to get it.
+
 To change an account view, publish the views (`php artisan vendor:publish
---tag=sunrice-account-views`) and edit your copy in `resources/views/account/`: an app's
-`account.dashboard` is used before the package's `account::dashboard` (`Layout::view()`).
+--tag=sunrice-account-views`) and edit your copy in `resources/views/vendor/account/`: an app's
+`resources/views/vendor/account/dashboard.blade.php` is used before the package's `account::dashboard`
+(Laravel's usual place for a package's views, so an app's own `resources/views/account/` is left alone).
 
 ## Signing in and registering
 
 | Page | Route | |
 | --- | --- | --- |
-| `/account/login` | `account.login` | Email and password; "keep me signed in" |
-| `/account/register` | `account.register` | While `registration` is on |
-| `/account/forgot-password` | `account.password.request` | Emails a reset link |
-| `/account/reset-password/{token}` | `account.password.reset` | Choose a new password |
-| `POST /account/logout` | `account.logout` | Signs out of the site only |
+| `/account/login` | `sunrice.account.login` | Email and password; "keep me signed in" |
+| `/account/register` | `sunrice.account.register` | While `registration` is on |
+| `/account/forgot-password` | `sunrice.account.password.request` | Emails a reset link |
+| `/account/reset-password/{token}` | `sunrice.account.password.reset` | Choose a new password |
+| `POST /account/logout` | `sunrice.account.logout` | Signs out of the site (with a shared guard, of the admin too) |
 
 The paths under the prefix come from `sunrice-account.paths`. These pages are for guests: a
 signed-in account goes to My Account. After signing in, people go back to the page they were
@@ -238,11 +245,11 @@ locked accounts, can't sign in either way.
 ### Email verification
 
 While `verifyEmail` is on (the default), a new account isn't signed in: it gets an email
-with a signed link (`account.verify`, valid for `auth.verification.expire` minutes, a day by
+with a signed link (`sunrice.account.verify`, valid for `auth.verification.expire` minutes, a day by
 default), and the visitor sees "check your email", as for an email that already has an account.
 The link verifies the address, signs the account in and opens My Account in the language it was
 sent in. Signing in with an unverified email is refused and sends a new link (at most once a
-minute); `/account/verify` (`account.verification.notice`) asks for one: a guest enters their email, a
+minute); `/account/verify` (`sunrice.account.verification.notice`) asks for one: a guest enters their email, a
 signed-in account still to verify sees where the link went and can send it again. An expired or
 used link leads there too, saying so.
 
@@ -270,7 +277,7 @@ not signed in by it.
   in: opened again, or by someone else, it verifies and sends them to sign in.
 - **Ending sessions.** A locked account (the panel's security page) is signed out of the site on
   its next account page, and so is every session that signed in before "Sign out everywhere".
-  Changing or resetting the password does that to the account's other sessions (`account.auth`
+  Changing or resetting the password does that to the account's other sessions (`sunrice.account.auth`
   checks; site sign-ins note when they started, like the admin's).
 - **Whether an email has an account** isn't told by sign-in (a wrong password and an unknown email
   take as long), the code check (every failure reads the same) or the forms that email. Changing
@@ -327,7 +334,7 @@ Settings → Accounts → Emails sets them up (`AccountSettings::EMAILS` names e
 `Account::emailSettings()` reads them for any email (`enabled($key)`, `subject($key, $locale)`,
 `addresses($key)`, `roles($key)`).
 
-To change an email's body, add `resources/views/account/emails/{key}.blade.php`, a markdown mail
+To change an email's body, add `resources/views/vendor/account/emails/{key}.blade.php`, a markdown mail
 view (`<x-mail::message>`). It gets `$lang`, `$site` and the email's data (`$name`, `$url`…).
 
 ### Your plugin's emails
@@ -362,8 +369,8 @@ its own.
 
 ### The menu
 
-My Account's menu has the package's **Overview** (`account.overview`, position 0) and **Profile**
-(`account.profile`, 90), and your plugin's pages:
+My Account's menu has the package's **Overview** (`sunrice.account.overview`, position 0) and **Profile**
+(`sunrice.account.profile`, 90), and your plugin's pages:
 
 ```php
 Account::routes(fn (string $suffix) => Route::get('orders', OrdersController::class)->name('shop.orders'.$suffix));

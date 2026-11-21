@@ -64,14 +64,14 @@ final class AccountServiceProvider extends PackageServiceProvider
     {
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'account');
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'account');
-        $this->publishes([__DIR__.'/../resources/views' => resource_path('views/account')], 'sunrice-account-views');
+        $this->publishes([__DIR__.'/../resources/views' => resource_path('views/vendor/account')], 'sunrice-account-views');
         $this->publishes([__DIR__.'/../lang' => lang_path('vendor/account')], 'sunrice-account-translations');
 
         $router = $this->app->make(Router::class);
-        $router->aliasMiddleware('account.auth', Middleware\Authenticate::class);
-        $router->aliasMiddleware('account.guest', Middleware\RedirectIfAuthenticated::class);
-        $router->aliasMiddleware('account.noindex', Middleware\NoIndex::class);
-        $router->aliasMiddleware('account.verified', Middleware\EnsureEmailVerified::class);
+        $router->aliasMiddleware('sunrice.account.auth', Middleware\Authenticate::class);
+        $router->aliasMiddleware('sunrice.account.guest', Middleware\RedirectIfAuthenticated::class);
+        $router->aliasMiddleware('sunrice.account.noindex', Middleware\NoIndex::class);
+        $router->aliasMiddleware('sunrice.account.verified', Middleware\EnsureEmailVerified::class);
 
         // After the app has booted: the site's saved languages and the account path apply, and
         // plugins have added their pages. The CMS's catch-all is a fallback route, so these win.
@@ -90,9 +90,9 @@ final class AccountServiceProvider extends PackageServiceProvider
         Event::listen(SignedIn::class, MarkSessionStart::class);
 
         $navigation = $this->app->make(MyAccount\Navigation::class);
-        $navigation->add('announcement', fn (): string => $this->app->make(MyAccount\Announcement::class)->title(), 'account.announcement',
+        $navigation->add('announcement', fn (): string => $this->app->make(MyAccount\Announcement::class)->title(), 'sunrice.account.announcement',
             fn (): bool => $this->app->make(MyAccount\Announcement::class)->position() === 'tab', -10);
-        $navigation->add('overview', fn (): string => (string) __('account::account.dashboard.title'), 'account.overview', position: 0);
-        $navigation->add('profile', fn (): string => (string) __('account::account.profile.title'), 'account.profile', position: 90);
+        $navigation->add('overview', fn (): string => (string) __('account::account.dashboard.title'), 'sunrice.account.overview', position: 0);
+        $navigation->add('profile', fn (): string => (string) __('account::account.profile.title'), 'sunrice.account.profile', position: 90);
     }
 }

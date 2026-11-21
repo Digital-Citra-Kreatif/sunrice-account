@@ -66,7 +66,7 @@ final class LoginController
         return redirect()->to(Redirects::afterSignIn($request));
     }
 
-    /** Signs out of the site only: the admin session stays. */
+    /** Signs out of the site (and of the admin too while the site shares its guard: see SignOut). */
     public function destroy(Request $request, SignOut $signOut): RedirectResponse
     {
         $signOut->handle();

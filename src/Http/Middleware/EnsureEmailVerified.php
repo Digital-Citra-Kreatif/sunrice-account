@@ -14,8 +14,8 @@ use Sunrice\Account\Settings\AccountSettings;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * `account.verified`: signed-in accounts with a verified email, while
- * Settings → Accounts requires verification (after `account.auth`).
+ * `sunrice.account.verified`: signed-in accounts with a verified email, while
+ * Settings → Accounts requires verification (after `sunrice.account.auth`).
  * Others are asked to verify first.
  */
 final class EnsureEmailVerified
@@ -34,6 +34,6 @@ final class EnsureEmailVerified
         // A link (at most one a minute), and the page saying where it went, with "Send it again".
         app(SendVerificationLink::class)->handle($user, app()->getLocale());
 
-        return redirect()->to(AccountRoutes::url('account.verification.notice'))->with('account.status', __('account::auth.verify.required'));
+        return redirect()->to(AccountRoutes::url('sunrice.account.verification.notice'))->with('account.status', __('account::auth.verify.required'));
     }
 }

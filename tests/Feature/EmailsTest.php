@@ -109,9 +109,10 @@ it('shows the site\'s brand, in the email\'s language', function () {
 
 it('uses the app\'s own body for an email', function () {
     $dir = sys_get_temp_dir().'/account-mail-'.bin2hex(random_bytes(4));
-    (new Filesystem)->ensureDirectoryExists("{$dir}/account/emails");
-    file_put_contents("{$dir}/account/emails/account_welcome.blade.php", "<x-mail::message>\nOur own welcome, {{ \$name }} ({{ \$lang }}).\n</x-mail::message>");
-    View::addLocation($dir);
+    (new Filesystem)->ensureDirectoryExists("{$dir}/emails");
+    file_put_contents("{$dir}/emails/account_welcome.blade.php", "<x-mail::message>\nOur own welcome, {{ \$name }} ({{ \$lang }}).\n</x-mail::message>");
+    // As resources/views/vendor/account/ is.
+    View::prependNamespace('account', $dir);
 
     try {
         expect((string) (new WelcomeNotification('en'))->toMail(siteUser())->render())->toContain('Our own welcome, Ana (en).');

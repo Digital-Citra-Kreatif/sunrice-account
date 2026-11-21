@@ -11,7 +11,8 @@ use InvalidArgumentException;
  * site's (sunrice-account.layout, by default the CMS's `cms.layout`) when
  * it exists, else the package's minimal one; both take a `content`
  * section and a `seoTitle`. Any account view can be replaced by the app's
- * copy in resources/views/account/ (`account.login` for `account::login`).
+ * copy in resources/views/vendor/account/ (Laravel's place for a package's
+ * views: `auth/login.blade.php` for `account::auth.login`).
  *
  * @api
  */
@@ -33,16 +34,13 @@ final class Layout
     }
 
     /**
-     * The app's copy of an account view when it has one, else the package's.
+     * An account view: the app's copy in resources/views/vendor/account/
+     * when it has one, else the package's (Laravel looks there first).
      *
      * @return view-string
      */
     public static function view(string $name): string
     {
-        $app = "account.{$name}";
-        if (view()->exists($app)) {
-            return $app;
-        }
         $package = "account::{$name}";
         if (view()->exists($package)) {
             return $package;

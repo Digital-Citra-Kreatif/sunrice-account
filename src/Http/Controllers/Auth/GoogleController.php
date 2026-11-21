@@ -32,7 +32,7 @@ final class GoogleController
         $stored = $request->session()->pull(self::SESSION);
         $locale = is_string($stored) && Locales::has($stored) ? $stored : Locales::default();
         app()->setLocale($locale);
-        $login = AccountRoutes::url('account.login', [], $locale);
+        $login = AccountRoutes::url('sunrice.account.login', [], $locale);
         try {
             $google = Google::driver()->user();
         } catch (Throwable) {

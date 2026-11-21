@@ -35,7 +35,7 @@ final class VerificationController
     {
         $user = SiteGuard::get()->user();
         if ($user !== null && Verification::verified($user)) {
-            return redirect()->to(AccountRoutes::url('account.dashboard'));
+            return redirect()->to(AccountRoutes::url('sunrice.account.dashboard'));
         }
         $email = $user?->getAttribute('email');
 
@@ -84,7 +84,7 @@ final class VerificationController
         $user = URL::hasValidSignature($request) ? Users::model()::query()->find($id) : null;
         if (! $user instanceof Authenticatable || ! hash_equals(Verification::hash($user), $hash)) {
             // Expired, changed, or for an address the account no longer has: ask for a new one.
-            return redirect()->to(AccountRoutes::url('account.verification.notice', [], $locale))->with('account.error', __('account::auth.verify.invalid'));
+            return redirect()->to(AccountRoutes::url('sunrice.account.verification.notice', [], $locale))->with('account.error', __('account::auth.verify.invalid'));
         }
 
         $verifiedNow = $verify->handle($user, $locale);
@@ -93,15 +93,15 @@ final class VerificationController
         // or sent to someone else, isn't a way into the account (or a way to swap theirs for it).
         $current = SiteGuard::get()->user();
         if ($current instanceof Model && $user->is($current)) {
-            return redirect()->to(AccountRoutes::url('account.dashboard', [], $locale))->with('account.status', __('account::auth.verify.done'));
+            return redirect()->to(AccountRoutes::url('sunrice.account.dashboard', [], $locale))->with('account.status', __('account::auth.verify.done'));
         }
         if (! $verifiedNow || $current !== null || SiteGuard::refusesStaff($user) || $accounts->isLocked($user)) {
-            return redirect()->to(AccountRoutes::url('account.login', [], $locale))->with('account.status', __('account::auth.verify.done'));
+            return redirect()->to(AccountRoutes::url('sunrice.account.login', [], $locale))->with('account.status', __('account::auth.verify.done'));
         }
         SiteGuard::get()->login($user);
         $request->session()->regenerate();
         event(new SignedIn($user, 'verification'));
 
-        return redirect()->to(AccountRoutes::url('account.dashboard', [], $locale))->with('account.status', __('account::auth.verify.done'));
+        return redirect()->to(AccountRoutes::url('sunrice.account.dashboard', [], $locale))->with('account.status', __('account::auth.verify.done'));
     }
 }

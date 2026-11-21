@@ -8,11 +8,11 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-/** `account.noindex`: private account pages stay out of search engines and shared caches. */
+/** `sunrice.account.noindex`: private account pages stay out of search engines and shared caches. */
 final class NoIndex
 {
     /** Request attribute layouts read for their robots meta tag. */
-    public const ATTRIBUTE = 'account.noindex';
+    public const ATTRIBUTE = 'sunrice.account.noindex';
 
     /** @param  Closure(Request): Response  $next */
     public function handle(Request $request, Closure $next): Response

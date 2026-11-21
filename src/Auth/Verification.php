@@ -28,7 +28,7 @@ final class Verification
     {
         $minutes = config('auth.verification.expire', 1440);
 
-        return URL::temporarySignedRoute('account.verify', now()->addMinutes(is_numeric($minutes) ? (int) $minutes : 1440), [
+        return URL::temporarySignedRoute('sunrice.account.verify', now()->addMinutes(is_numeric($minutes) ? (int) $minutes : 1440), [
             'id' => $user->getAuthIdentifier(),
             'hash' => self::hash($user),
             'lang' => $locale,
