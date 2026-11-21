@@ -8,6 +8,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Sunrice\Account\Auth\Actions\RegisterAccount;
+use Sunrice\Account\Auth\Actions\SendVerificationLink;
 use Sunrice\Account\Auth\SiteGuard;
 use Sunrice\Account\Auth\Throttle;
 use Sunrice\Account\Events\SignedIn;
@@ -32,7 +33,7 @@ final class RegisterController
         ]);
     }
 
-    public function store(Request $request, AccountSettings $settings, RegisterAccount $register): RedirectResponse
+    public function store(Request $request, AccountSettings $settings, RegisterAccount $register, SendVerificationLink $verification): RedirectResponse
     {
         abort_unless($settings->boolean('general.registration', true), 404);
         // 5 accounts an hour from one address.
@@ -47,6 +48,12 @@ final class RegisterController
             return redirect()->to(AccountRoutes::url('account.login'))->with('account.status', __('account::auth.register.check_email'));
         }
 
+        if ($settings->boolean('general.verify_email', true)) {
+            // The same answer as for a taken email: the link signs the account in.
+            $verification->handle($user, app()->getLocale());
+
+            return redirect()->to(AccountRoutes::url('account.login'))->with('account.status', __('account::auth.register.check_email'));
+        }
         SiteGuard::get()->login($user);
         $request->session()->regenerate();
         event(new SignedIn($user, 'registration'));

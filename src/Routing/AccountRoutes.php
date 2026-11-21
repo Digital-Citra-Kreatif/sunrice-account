@@ -6,6 +6,7 @@ namespace Sunrice\Account\Routing;
 
 use Closure;
 use Illuminate\Support\Facades\Route;
+use Sunrice\Account\Http\Controllers\Auth\VerificationController;
 use Sunrice\Account\Http\Middleware\Authenticate;
 use Sunrice\Account\Http\Middleware\ForgetLocaleParameter;
 use Sunrice\Account\Http\Middleware\NoIndex;
@@ -121,6 +122,10 @@ final class AccountRoutes
             require __DIR__.'/../../routes/account.php';
         }, 'signedIn' => false], ...$this->extensions]);
         $this->extensions = [];
+        // The verification link: one fixed address (signed), its language in ?lang=.
+        Route::middleware(['web', NoIndex::class])->prefix(self::prefix())
+            ->get(self::path('verify').'/{id}/{hash}', [VerificationController::class, 'verify'])
+            ->whereNumber('id')->name('account.verify');
     }
 
     /** @param  list<array{routes: Closure(string): void, signedIn: bool}>  $extensions */

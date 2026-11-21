@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
 use Sunrice\Account\Events\SignedIn;
 use Sunrice\Account\Events\SignedOut;
 use Sunrice\Account\Facades\Account;
+use Sunrice\Account\Notifications\VerifyEmailNotification;
 use Sunrice\Admin\Actions\Permissions\SyncPermissions;
 use Sunrice\Admin\Panel;
 use Sunrice\Admin\Security\AccountGuard;
@@ -47,6 +49,25 @@ it('slows down repeated attempts', function () {
     $this->post('/account/login', ['email' => 'ana@example.com', 'password' => 'secret-pass'])->assertSessionHasErrors('email');
     expect(session('errors')->first('email'))->toContain('Terlalu banyak percobaan');
     $this->assertGuest('account');
+});
+
+it('asks an unverified account to verify its email, sending a new link once a minute', function () {
+    Notification::fake();
+    $user = siteUser(['email_verified_at' => null]);
+
+    $this->post('/account/login', ['email' => 'ana@example.com', 'password' => 'secret-pass'])->assertSessionHasErrors('email');
+    expect(session('errors')->first('email'))->toBe('Verifikasi alamat email Anda dulu: kami sudah mengirimkan tautannya.');
+    $this->post('/account/login', ['email' => 'ana@example.com', 'password' => 'secret-pass'])->assertSessionHasErrors('email');
+
+    $this->assertGuest('account');
+    Notification::assertSentToTimes($user, VerifyEmailNotification::class, 1);
+});
+
+it('signs in an unverified account while emails aren\'t verified', function () {
+    siteUser(['email_verified_at' => null]);
+    Account::settings()->saveSection('general', ['verify_email' => false]);
+
+    $this->post('/account/login', ['email' => 'ana@example.com', 'password' => 'secret-pass'])->assertRedirect('/account');
 });
 
 it('refuses a locked account', function () {

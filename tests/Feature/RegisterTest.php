@@ -10,6 +10,7 @@ use Sunrice\Account\Events\Registered;
 use Sunrice\Account\Events\Registering;
 use Sunrice\Account\Facades\Account;
 use Sunrice\Account\Notifications\ExistingAccountNotification;
+use Sunrice\Account\Notifications\VerifyEmailNotification;
 use Workbench\App\Models\User;
 
 const STRONG = 'Correct-Horse-Battery-9';
@@ -19,8 +20,9 @@ function registration(array $overrides = []): array
     return [...['name' => 'Budi', 'email' => 'Budi@Example.com', 'phone' => '0812 3456 7890', 'password' => STRONG, 'password_confirmation' => STRONG, 'accepts_marketing' => '1'], ...$overrides];
 }
 
-it('creates an account with the default roles and a profile, and signs it in', function () {
+it('creates an account with the default roles and a profile, and signs it in when emails aren\'t verified', function () {
     Event::fake([Registered::class]);
+    Account::settings()->saveSection('general', ['verify_email' => false]);
 
     $this->post('/account/register', registration())->assertRedirect('/account')->assertSessionHas('account.status');
 
@@ -39,7 +41,20 @@ it('creates an account with the default roles and a profile, and signs it in', f
     Event::assertDispatched(Registered::class, fn (Registered $e) => $e->user->getAuthIdentifier() === $user->id && $e->locale === 'id');
 });
 
+it('sends a verification link instead of signing in while emails are verified', function () {
+    Notification::fake();
+
+    $this->post('/account/register', registration())->assertRedirect('/account/login')
+        ->assertSessionHas('account.status', 'Periksa email Anda untuk melanjutkan.');
+
+    $user = User::query()->where('email', 'budi@example.com')->firstOrFail();
+    expect($user->email_verified_at)->toBeNull()->and($user->hasRole('member'))->toBeTrue();
+    $this->assertGuest('account');
+    Notification::assertSentTo($user, VerifyEmailNotification::class, fn (VerifyEmailNotification $n) => $n->lang === 'id');
+});
+
 it('registers in the language of the address', function () {
+    Account::settings()->saveSection('general', ['verify_email' => false]);
     $this->get('/en/account/register')->assertOk()->assertSee('Create an account');
     $this->post('/en/account/register', registration())->assertRedirect('/en/account');
 
@@ -91,6 +106,7 @@ it('is closed when registration is off', function () {
 });
 
 it('lets one address register a few accounts an hour', function () {
+    Notification::fake();
     foreach (range(1, 5) as $i) {
         $this->post('/account/register', registration(['email' => "budi{$i}@example.com"]));
         auth('account')->logout();
