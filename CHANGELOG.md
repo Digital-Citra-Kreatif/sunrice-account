@@ -5,6 +5,9 @@
 - `Account::roles($user)`: the names of an account's roles, sorted. `Account::redirectToSignIn(?string
   $returnTo = null)`: sends a guest to sign in and back to the page they asked for (or `$returnTo`)
   afterwards; for plugins with members-only pages.
+- The package's layout styles a link made a button (`<a class="account-button account-button--primary">`) as
+  one: its text no longer takes the link colour. `account-actions` lays out a row of buttons and
+  links.
 - The package's own site layout (for a site without one) styles the account pages: plain, light
   and dark, phone-friendly CSS for the `account-*` classes, inline with the site's CSP nonce. A
   site's own layout styles them itself.
