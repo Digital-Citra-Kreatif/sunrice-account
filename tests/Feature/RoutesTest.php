@@ -71,7 +71,7 @@ it('takes the account prefix from the settings page, else from config', function
     config(['sunrice-account.paths.prefix' => '/members/']);
     expect(AccountRoutes::prefix())->toBe('members');
 
-    Account::settings()->saveSection('general', ['path' => 'my-account']);
+    accountSettings(['path' => 'my-account']);
     expect(AccountRoutes::prefix())->toBe('my-account')
         ->and(AccountRoutes::path('login'))->toBe('login');
 });

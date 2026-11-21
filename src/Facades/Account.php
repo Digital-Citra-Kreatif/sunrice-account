@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Facade;
 
 /**
  * @method static \Sunrice\Account\Settings\AccountSettings settings()
+ * @method static void settingsShownBy(string $plugin)
+ * @method static string|null settingsOwner()
  * @method static \Sunrice\Account\Emails\Emails emails()
  * @method static \Sunrice\Account\Emails\EmailSettings emailSettings()
  * @method static string guard()

@@ -5,15 +5,21 @@
 - The package: `sunrice/account`, a Sunrice plugin (`AccountPlugin`, id `account`, after the CMS).
   - The site's own session guard, `account` (`sunrice-account.auth.guard`), defined on the user
     provider of the panel's guard unless `config/auth.php` defines it.
-  - Account settings (`AccountSettings`, `Account::settings()`): one `account` row in the panel's
-    settings table over `config('sunrice-account.defaults')`, saved a section at a time.
+  - Settings → Accounts (`AccountSettings`, `Account::settings()`): a panel settings section
+    (`accounts`) with typed settings in four parts (General, Sign-in, Announcement, Emails),
+    checked on save: new accounts' roles can't open the admin, the account address, the links
+    after sign-in and to the terms stay on the site, Google needs its credentials. Saving a new
+    account address clears the route cache. AI agents get it with the panel's settings tools.
+  - `Account::settingsShownBy($plugin)`: a plugin shows the account settings on a page of its own
+    (with `SettingsFields::make(AccountSettings::class, AccountSettings::form(new Form))`) and
+    Settings → Accounts leaves the menu. `AccountSettings::sections()` gives the form's parts.
   - Profiles (`account_profiles`, `Account::profile($user)`): phone, language, marketing consent,
     deletion request and `meta` for plugins.
-  - The `account.settings.manage` permission and the `member` role (no admin permissions), created
+  - The `account.settings.accounts` permission (with the settings section) and the `member` role (no admin permissions), created
     by `sunrice:roles`.
 - Account pages and their routes:
-  - Under the account prefix (`sunrice-account.paths.prefix`, `account`; the settings page's
-    `general.path` wins), in every language of the site: `/account`, `/en/account`. Route names
+  - Under the account prefix (`sunrice-account.paths.prefix`, `account`; Settings → Accounts'
+    `path` wins), in every language of the site: `/account`, `/en/account`. Route names
     `account.*`, with `.locale` for the other languages; `Account::url()` builds the address in the
     current language. `AccountRoutes::localized()` registers any routes that way.
   - `Account::routes()` adds other plugins' pages under the prefix, signed-in only unless said.
@@ -36,12 +42,12 @@
   - Nothing reveals whether an email has an account: a registration with a taken email creates
     nothing and emails its owner instead (`ExistingAccountNotification`); reset requests always
     get the same answer.
-  - New accounts get the default roles (`general.default_roles`) and a profile (phone, language,
-    marketing consent). Settings `general.phone` (off/optional/required), `marketing_consent`,
-    `terms_url` and `redirect_after_login`.
+  - New accounts get the default roles (`defaultRoles`) and a profile (phone, language,
+    marketing consent). Settings `phone` (off/optional/required), `marketingConsent`,
+    `termsUrl` and `redirectAfterLogin`.
   - Events: `Registering` (change the data, or refuse with a `ValidationException`), `Registered`,
     `SignedIn`, `SignedOut`, `PasswordReset`. Actions in `Sunrice\Account\Auth\Actions`.
-- Email verification (`general.verify_email`, on by default):
+- Email verification (`verifyEmail`, on by default):
   - A new account gets a signed link (`/account/verify/{id}/{hash}`, `account.verify`, valid for
     `auth.verification.expire` minutes, a day by default) instead of being signed in; the answer is
     the same as for a taken email. The link verifies the address, signs the account in and opens
@@ -57,22 +63,23 @@
   - A registry of `EmailDefinition`s (key, label, audience, locked, default texts): the package's
     welcome, verify email, password reset, account already exists, and to staff, new account.
     Plugins register theirs.
-  - Settings per email under `emails.{key}`: `enabled` (the verify, reset and existing-account
-    emails can't be switched off), `subject` per language (`:site`, `{name}` placeholders), and for
-    staff emails `addresses` and `roles` (default: super admins and administrators).
+  - Settings per email (`welcomeEmail`, `welcomeSubject`…): a switch (the verify, reset,
+    existing-account and sign-in code emails have none), the subject per language (`:site`,
+    `{name}` placeholders), and for staff emails addresses and roles (default: super admins and
+    administrators). A plugin's email gives its own settings (`EmailDefinition` `settings:`).
   - `AccountEmail`, the base of every account email: queued, in one language, with the site's mail
     brand (`Panel::mailBrand()`) in `account::mail.notification`; an app replaces an email's body
     with `resources/views/account/emails/{key}.blade.php`.
   - New: the welcome email (at registration while emails aren't verified, else once verified) and
     the staff email of a new account (to the chosen roles' users and addresses, each once, in the
     site's main language).
-- Sign in with an emailed code (`general.login_code`, off by default), with
+- Sign in with an emailed code (`loginCode`, off by default), with
   `spatie/laravel-one-time-passwords`: the user model needs its `HasOneTimePasswords` trait, and its
   `one_time_passwords` migration (`php artisan vendor:publish --tag=one-time-passwords-migrations`).
-  6 digits, valid for `general.code_minutes` (10), once, from the browser that asked, 5 tries a
+  6 digits, valid for `codeMinutes` (10), once, from the browser that asked, 5 tries a
   minute per account plus 10 per 10 minutes per email and IP; one code a minute per email; the same
   answer for any email. A code verifies the email. `LoginCodes`, email `account_login_code` (locked).
-- Sign in with Google (`general.google_login`, off by default; `laravel/socialite`, credentials
+- Sign in with Google (`googleLogin`, off by default; `laravel/socialite`, credentials
   from `services.google` or `sunrice-account.google`): a linked account signs in; a verified
   Google email links the account that has it; otherwise an account is created (verified, default
   roles, `password_set` false) while registration is open. Links in `account_social_accounts`.
@@ -88,12 +95,12 @@
   - Profile (`/account/profile`): name, email (a new one needs the current password and is verified
     again while emails are verified), phone, marketing consent and plugins' fields; changing or
     first choosing a password (a new remember token signs out other devices); asking for the
-    account to be deleted (`general.deletion_requests`), which emails staff
+    account to be deleted (`deletionRequests`), which emails staff
     (`account_staff_deletion`). Actions `UpdateProfile`, `ChangePassword`, `RequestDeletion`; events
     `ProfileUpdating` (change or refuse), `ProfileUpdated` (`$changed`), `PasswordChanged`,
     `DeletionRequested`.
   - Plugins' fields on the registration form and the profile page (`Account::registrationFields()`,
     `Account::profileFields()`: text, textarea, select, checkbox, with their rules), kept in the
     profile's `meta`.
-  - An announcement (settings `announcement`: `enabled`, `position` tab/above/below, `title` and
-    `message` per language), escaped, line breaks kept.
+  - An announcement (settings `announcement`, `announcementPosition` tab/above/below, a title and
+    message per language), escaped, line breaks kept.

@@ -60,23 +60,23 @@ it('shows plugins\' cards on the dashboard', function () {
 });
 
 it('shows the announcement as the first page, or above the pages', function () {
-    Account::settings()->saveSection('announcement', ['enabled' => true, 'position' => 'tab', 'title' => ['id' => 'Libur', 'en' => 'Holiday'], 'message' => ['id' => "Toko tutup.\nSampai jumpa."]]);
+    accountSettings(['announcement' => true, 'announcementPosition' => 'tab', 'announcementTitle' => 'Libur', 'announcementTitles' => 'en: Holiday', 'announcementMessage' => "Toko tutup.\nSampai jumpa."]);
 
     $this->get('/account')->assertRedirect('http://localhost/account/announcement');
     $this->get('/account/announcement')->assertOk()->assertSee('Libur')->assertSee('Toko tutup.<br />', false);
     // In English, the main language's message.
     $this->get('/en/account/announcement')->assertSee('Holiday')->assertSee('Toko tutup.');
 
-    Account::settings()->saveSection('announcement', ['position' => 'above']);
+    accountSettings(['announcementPosition' => 'above']);
     $this->get('/account')->assertOk()->assertSee('account-announcement', false);
     $this->get('/account/announcement')->assertNotFound();
 
-    Account::settings()->saveSection('announcement', ['enabled' => false]);
+    accountSettings(['announcement' => false]);
     $this->get('/account')->assertDontSee('account-announcement', false);
 });
 
 it('escapes the announcement', function () {
-    Account::settings()->saveSection('announcement', ['enabled' => true, 'position' => 'above', 'message' => ['id' => '<script>alert(1)</script>']]);
+    accountSettings(['announcement' => true, 'announcementPosition' => 'above', 'announcementMessage' => '<script>alert(1)</script>']);
 
     $this->get('/account')->assertDontSee('<script>alert(1)</script>', false)->assertSee('&lt;script&gt;', false);
 });

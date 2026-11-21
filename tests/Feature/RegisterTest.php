@@ -22,7 +22,7 @@ function registration(array $overrides = []): array
 
 it('creates an account with the default roles and a profile, and signs it in when emails aren\'t verified', function () {
     Event::fake([Registered::class]);
-    Account::settings()->saveSection('general', ['verify_email' => false]);
+    accountSettings(['verifyEmail' => false]);
 
     $this->post('/account/register', registration())->assertRedirect('/account')->assertSessionHas('account.status');
 
@@ -54,7 +54,7 @@ it('sends a verification link instead of signing in while emails are verified', 
 });
 
 it('registers in the language of the address', function () {
-    Account::settings()->saveSection('general', ['verify_email' => false]);
+    accountSettings(['verifyEmail' => false]);
     $this->get('/en/account/register')->assertOk()->assertSee('Create an account');
     $this->post('/en/account/register', registration())->assertRedirect('/en/account');
 
@@ -73,7 +73,7 @@ it('never reveals that an email has an account', function () {
 });
 
 it('validates what the settings ask for', function () {
-    Account::settings()->saveSection('general', ['phone' => 'required', 'terms_url' => 'https://example.com/terms']);
+    accountSettings(['phone' => 'required', 'termsUrl' => 'https://example.com/terms']);
 
     $this->get('/account/register')->assertSee('https://example.com/terms');
     $this->post('/account/register', registration(['phone' => '']))->assertSessionHasErrors(['phone', 'terms']);
@@ -98,7 +98,7 @@ it('lets listeners change the registration or refuse it', function () {
 });
 
 it('is closed when registration is off', function () {
-    Account::settings()->saveSection('general', ['registration' => false]);
+    accountSettings(['registration' => false]);
 
     $this->get('/account/register')->assertNotFound();
     $this->post('/account/register', registration())->assertNotFound();

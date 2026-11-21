@@ -10,8 +10,7 @@ final class AccountPermissions
     /** @return array<string, array{0: string, 1: string}> name => [label, group] */
     public static function all(): array
     {
-        return [
-            'account.settings.manage' => ['Edit account settings', 'Accounts'],
-        ];
+        // Settings → Accounts' own permission, account.settings.accounts, comes with the section.
+        return [];
     }
 }

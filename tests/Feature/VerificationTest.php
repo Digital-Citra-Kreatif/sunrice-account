@@ -102,10 +102,10 @@ it('keeps unverified accounts out of pages that need a verified email', function
     $this->actingAs(siteUser(['email_verified_at' => null]), 'account');
     $this->get('/account/checkout')->assertRedirect('/account/verify');
 
-    Account::settings()->saveSection('general', ['verify_email' => false]);
+    accountSettings(['verifyEmail' => false]);
     $this->get('/account/checkout')->assertOk();
 
     $this->actingAs(siteUser(['email' => 'v@example.com']), 'account');
-    Account::settings()->saveSection('general', ['verify_email' => true]);
+    accountSettings(['verifyEmail' => true]);
     $this->get('/account/checkout')->assertOk();
 });

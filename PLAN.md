@@ -12,7 +12,7 @@ sunrice-commerce's customer accounts. Commerce today has all of this built in
 | Package | `sunrice/account`, namespace `Sunrice\Account\`, plugin id `account`, requires `sunrice/admin` and `sunrice/cms` ^0.8 |
 | Guard | `account` session guard, on the panel guard's user provider. Same users table, separate session |
 | Default role | `member`, no admin permissions, seeded by `sunrice:roles`. Commerce adds `customer` |
-| Sign-in methods | Password, emailed one-time code (spatie/laravel-one-time-passwords: the user model uses its `HasOneTimePasswords` trait; the panel's two-factor login moves onto it too) and Google (laravel/socialite), the last two optional and off by default |
+| Sign-in methods | Password, emailed one-time code (moving to the panel's `EmailCodes` from Sunrice 0.8.1, so spatie/laravel-one-time-passwords goes) and Google (laravel/socialite), the last two optional and off by default |
 | Account URL | In config (`paths`), overridable in the settings page. Routes read it when they're registered; saving it clears the route cache |
 | Admin | Administration → Accounts (list, roles, reset link, mark verified, deletion requests, anonymize). Commerce's Shop → Customers extends it |
 | Plugin data | Plugins add pages, dashboard cards, profile and registration fields (stored in `account_profiles.meta`) and listen to events |
@@ -22,9 +22,10 @@ sunrice-commerce's customer accounts. Commerce today has all of this built in
 ## How it fits Sunrice
 
 - A plugin can't replace another plugin's settings page in the panel (duplicate keys throw), so the
-  override is built into this package: the page is drawn from a section registry, and a plugin
-  that requires `account` (its `register()` runs before our `boot()`) can add, replace or remove
-  sections, or say it shows them itself (`Account::settingsShownBy()`), which hides our page.
+  override is built into this package: Settings → Accounts is a panel settings section
+  (`AccountSettings`), hidden (`available()`) once a plugin says it shows it itself
+  (`Account::settingsShownBy()`). That plugin draws the same fields on its page with the panel's
+  `SettingsFields` and saves them with `SaveSettings`, so the checks stay in one place.
 - Plugins can't add columns to Administration → Users. The app swaps that screen with
   `$panel->userResource()`: we ship `AccountUserResource`, listing staff only, which commerce's
   `StaffUserResource` extends.
@@ -39,7 +40,7 @@ sunrice-commerce's customer accounts. Commerce today has all of this built in
 - `Account::dashboardCard(...)`: blocks on the dashboard.
 - `Account::landingUsing(fn () => $url)`: where `/account` opens (commerce: Orders).
 - `Account::registrationFields(...)`, `Account::profileFields(...)`: extra fields with their rules.
-- `Account::settingsSections()`: add, replace, remove sections; `Account::settingsShownBy($plugin)`.
+- `Account::settingsShownBy($plugin)`, with `AccountSettings::form()` and `::sections()` for its page.
 - `Account::emails()->register(...)`: more account emails.
 - Events. Before (change the data, or refuse it with a `ValidationException`): `Registering`,
   `ProfileUpdating`. After: `Registered`, `Verified`, `SignedIn`, `SignedOut`, `ProfileUpdated`,
@@ -62,8 +63,8 @@ sunrice-commerce's customer accounts. Commerce today has all of this built in
 6. **Sign in with a code and with Google** ✅: moved from commerce, optional, off by default.
 7. **My Account** ✅: menu, dashboard and cards, landing hook, profile (name, email, phone, marketing
    consent), password, deletion request, announcement; registration and profile fields; events.
-8. **Settings page**: Settings → Accounts from the section registry (general, sign-in, emails,
-   announcement), with cross-checks, and the take-over API.
+8. **Settings page** ✅: Settings → Accounts, a panel settings section (`AccountSettings`: general,
+   sign-in, announcement, emails), with cross-checks, and the take-over API.
 9. **Admin accounts**: default roles on registration, `AccountUserResource`, Administration →
    Accounts with its actions and `account.accounts.*` permissions.
 10. **Finish**: `account:install`, a health check, docs, CHANGELOG, tag 0.1.0.
@@ -75,7 +76,8 @@ sunrice-commerce's customer accounts. Commerce today has all of this built in
    Quotes, Downloads, Points, Addresses and Wishlist pages register with `Account::routes()` and
    `Account::page()`.
 3. Cart merge, guest-order linking and the customer record listen to the account events.
-4. Settings → Store → Accounts shows the account settings (commerce takes the page over).
+4. Settings → Store → Accounts shows the account settings (`Account::settingsShownBy('commerce')`, a
+   `page:` section drawing `AccountSettings::form()` with `SettingsFields`).
 5. Commerce's Settings → Emails lists the account emails from `Account::emails()`.
 6. A migration moves stored `commerce.accounts.*` settings and `commerce_customers` phone and
    consent into the account tables.

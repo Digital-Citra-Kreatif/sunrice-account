@@ -24,10 +24,29 @@ use Sunrice\Account\Settings\AccountSettings;
  */
 final class Account
 {
-    /** The settings (Settings → Accounts) over their config defaults. */
+    private ?string $settingsOwner = null;
+
+    /** The settings (Settings → Accounts), as saved (each property's default until then). */
     public function settings(): AccountSettings
     {
         return app(AccountSettings::class);
+    }
+
+    /**
+     * A plugin shows the account settings on a page of its own (commerce:
+     * Settings → Store → Accounts), so Settings → Accounts leaves the menu
+     * and there are never two places for them. Call it in the plugin's
+     * register(). The plugin draws the form with SettingsFields (see the docs).
+     */
+    public function settingsShownBy(string $plugin): void
+    {
+        $this->settingsOwner = $plugin;
+    }
+
+    /** The plugin showing the account settings, or null when Settings → Accounts does. */
+    public function settingsOwner(): ?string
+    {
+        return $this->settingsOwner;
     }
 
     /** The account emails: the package's and plugins' (`->register(new EmailDefinition(...))`). */

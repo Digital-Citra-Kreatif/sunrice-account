@@ -4,111 +4,424 @@ declare(strict_types=1);
 
 namespace Sunrice\Account\Settings;
 
-use Illuminate\Support\Arr;
-use Sunrice\Account\Support\Defaults;
-use Throwable;
+use Closure;
+use Spatie\Permission\Models\Role;
+use Sunrice\Account\AccountPlugin;
+use Sunrice\Account\Auth\Google;
+use Sunrice\Account\Emails\Emails;
+use Sunrice\Account\Facades\Account;
+use Sunrice\Account\MyAccount\Announcement;
+use Sunrice\Account\Routing\AccountRoutes;
+use Sunrice\Admin\Panel;
+use Sunrice\Admin\Resources\Forms\CheckboxList;
+use Sunrice\Admin\Resources\Forms\Form;
+use Sunrice\Admin\Resources\Forms\ListInput;
+use Sunrice\Admin\Resources\Forms\NumberInput;
+use Sunrice\Admin\Resources\Forms\Pairs;
+use Sunrice\Admin\Resources\Forms\Section;
+use Sunrice\Admin\Resources\Forms\Select;
+use Sunrice\Admin\Resources\Forms\Textarea;
+use Sunrice\Admin\Resources\Forms\TextInput;
+use Sunrice\Admin\Resources\Forms\Toggle;
+use Sunrice\Admin\Settings\Settings;
+use Sunrice\Cms\Support\Locales;
 
 /**
- * The account settings: one `account` row in the panel's settings table,
- * laid over the defaults in config('sunrice-account.defaults'). Read once
- * per request (one cached query for every settings row).
+ * The account settings: Settings → Accounts (`/admin/settings/accounts`,
+ * permission `account.settings.accounts`), read anywhere with
+ * `app(AccountSettings::class)` or `Account::settings()`:
  *
- *     app(AccountSettings::class)->boolean('general.registration');
- *     app(AccountSettings::class)->section('general');
+ *     Account::settings()->registration;      // true
+ *     Account::settings()->fill(['verifyEmail' => false])->save();
  *
- * Plugins built on accounts keep their own sections here too (commerce's
- * "checkout_accounts"…): saveSection() only touches the section it's given.
+ * A plugin that shows these settings on a page of its own (commerce's
+ * Settings → Store) calls `Account::settingsShownBy('commerce')`: the
+ * section leaves the Settings menu, and the plugin draws this form there
+ * with `SettingsFields::make(AccountSettings::class, AccountSettings::form(new Form))`.
+ *
+ * Texts per language are kept as "code: text" lines (`Pairs::fixed()`):
+ * read them with `AccountSettings::line()`.
  *
  * @api
  */
-final class AccountSettings
+final class AccountSettings extends Settings
 {
-    public const KEY = 'account';
+    public const KEY = 'accounts';
 
-    /** @var array<array-key, mixed>|null */
-    private ?array $resolved = null;
+    /** The phone number at registration. */
+    public const PHONE = ['off', 'optional', 'required'];
 
     /**
-     * The stored values only (empty before anything is saved, or before
-     * the tables exist).
-     *
-     * @return array<string, mixed>
+     * The package's emails' settings properties: email key => property
+     * prefix ("welcome": welcomeEmail, welcomeSubject…). Locked emails have
+     * no switch; staff emails have addresses and roles.
      */
-    public function stored(): array
+    public const EMAILS = [
+        Emails::WELCOME => 'welcome',
+        Emails::VERIFY => 'verify',
+        Emails::RESET => 'reset',
+        Emails::EXISTING => 'existing',
+        Emails::LOGIN_CODE => 'loginCode',
+        Emails::STAFF_REGISTRATION => 'staffRegistration',
+        Emails::STAFF_DELETION => 'staffDeletion',
+    ];
+
+    // General
+
+    /** Visitors can create an account. */
+    public bool $registration = true;
+
+    /** New accounts confirm their email address before they can sign in. */
+    public bool $verifyEmail = true;
+
+    /** @var list<string> roles new accounts get (none of them may open the admin) */
+    public array $defaultRoles = [AccountPlugin::MEMBER_ROLE];
+
+    /** The account address prefix; empty: config('sunrice-account.paths.prefix'). */
+    public string $path = '';
+
+    /** The phone number at registration: off, optional or required. */
+    public string $phone = 'optional';
+
+    /** Offer a "send me news and offers" checkbox. */
+    public bool $marketingConsent = true;
+
+    /** A terms page to agree to at registration (a URL or a site path); empty: none. */
+    public string $termsUrl = '';
+
+    /** A site path to go to after signing in; empty: My Account. */
+    public string $redirectAfterLogin = '';
+
+    /** Accounts can ask to be deleted from their profile page. */
+    public bool $deletionRequests = true;
+
+    // Sign-in
+
+    /** Sign in with a code sent by email. */
+    public bool $loginCode = false;
+
+    /** How long a sign-in code works, in minutes (1–60). */
+    public int $codeMinutes = 10;
+
+    /** Sign in with Google (needs the credentials). */
+    public bool $googleLogin = false;
+
+    // Announcement
+
+    public bool $announcement = false;
+
+    /** tab (My Account's first page), above or below every page. */
+    public string $announcementPosition = 'above';
+
+    /** In the main language; other languages in "code: text" lines. */
+    public string $announcementTitle = '';
+
+    public string $announcementTitles = '';
+
+    public string $announcementMessage = '';
+
+    public string $announcementMessages = '';
+
+    // Emails: subjects per language ("code: subject" lines; empty: the default text)
+
+    public bool $welcomeEmail = true;
+
+    public string $welcomeSubject = '';
+
+    public string $verifySubject = '';
+
+    public string $resetSubject = '';
+
+    public string $existingSubject = '';
+
+    public string $loginCodeSubject = '';
+
+    public bool $staffRegistrationEmail = true;
+
+    public string $staffRegistrationSubject = '';
+
+    /** @var list<string> */
+    public array $staffRegistrationAddresses = [];
+
+    /** @var list<string>|null null: super admins and administrators */
+    public ?array $staffRegistrationRoles = null;
+
+    public bool $staffDeletionEmail = true;
+
+    public string $staffDeletionSubject = '';
+
+    /** @var list<string> */
+    public array $staffDeletionAddresses = [];
+
+    /** @var list<string>|null null: super admins and administrators */
+    public ?array $staffDeletionRoles = null;
+
+    public static function key(): string
     {
-        try {
-            return (new StoredValues)->values;
-        } catch (Throwable) {
-            return [];
+        return self::KEY;
+    }
+
+    public static function label(): string
+    {
+        return 'Accounts';
+    }
+
+    public static function description(): string
+    {
+        return 'Site accounts: who can register, how they sign in, My Account and the account emails.';
+    }
+
+    /** Hidden while a plugin shows these settings on a page of its own (`Account::settingsShownBy()`). */
+    public static function available(): bool
+    {
+        return Account::settingsOwner() === null;
+    }
+
+    public static function form(Form $form): Form
+    {
+        return $form->schema([...self::sections()]);
+    }
+
+    /**
+     * The form's sections by key (general, sign-in, announcement, emails),
+     * for a plugin that shows some of them in its own places.
+     *
+     * @return array<string, Section>
+     */
+    public static function sections(): array
+    {
+        return [
+            'general' => self::general(),
+            'sign-in' => self::signIn(),
+            'announcement' => self::announcementSection(),
+            'emails' => self::emails(),
+        ];
+    }
+
+    /**
+     * A language's text in "code: text" lines (a Pairs field's value), or
+     * '' when it has none.
+     */
+    public static function line(string $lines, string $locale): string
+    {
+        foreach (preg_split('/\R/', $lines) ?: [] as $line) {
+            [$code, $text] = array_pad(explode(':', $line, 2), 2, '');
+            if (strcasecmp(trim($code), $locale) === 0 && trim($text) !== '') {
+                return trim($text);
+            }
         }
+
+        return '';
     }
 
-    /** @return array<array-key, mixed> */
-    public function all(): array
+    /** @return list<string> the roles new accounts get (defaultRoles, without empty names) */
+    public function roles(): array
     {
-        $defaults = config('sunrice-account.defaults', []);
-
-        return $this->resolved ??= Defaults::merge(is_array($defaults) ? $defaults : [], $this->stored());
+        return array_values(array_filter(array_map(trim(...), $this->defaultRoles), fn (string $role): bool => $role !== ''));
     }
 
-    public function get(string $key, mixed $default = null): mixed
+    private static function general(): Section
     {
-        return Arr::get($this->all(), $key, $default);
+        return Section::make('General')->columns(2)->schema([
+            Toggle::make('registration')->label('Visitors can create an account')->span(2),
+            Toggle::make('verifyEmail')->label('New accounts confirm their email address')->span(2)
+                ->help('They can sign in once they have opened the link emailed to them.'),
+            CheckboxList::make('defaultRoles')->label('Roles of new accounts')->span(2)
+                ->options(fn (): array => self::siteRoles())
+                ->rules([self::rule(self::checkRoles(...))])
+                ->help('Only roles without admin permissions: new accounts never open the admin.'),
+            TextInput::make('path')->label('Account address')->maxLength(60)->placeholder(self::configuredPrefix())
+                ->rules([self::rule(self::checkPath(...))])
+                ->help('Where the account pages are: /'.self::configuredPrefix().', /en/'.self::configuredPrefix().'. Lowercase letters, numbers and dashes.')
+                ->warnWhenChanged('Links to the old address stop working.'),
+            Select::make('phone')->label('Phone number at registration')->required()
+                ->options(['off' => 'Not asked', 'optional' => 'Optional', 'required' => 'Required']),
+            TextInput::make('termsUrl')->label('Terms page')->maxLength(255)->placeholder('/terms')
+                ->rules([self::rule(self::checkLink(...))])
+                ->help('When set, new accounts agree to it to register. A site path or a full URL.'),
+            TextInput::make('redirectAfterLogin')->label('After signing in, go to')->maxLength(255)->placeholder('My Account')
+                ->rules([self::rule(self::checkSitePath(...))])
+                ->help('A path on the site. Empty: My Account. A page someone was trying to open wins.'),
+            Toggle::make('marketingConsent')->label('Offer "Send me news and offers"')->span(2),
+            Toggle::make('deletionRequests')->label('Accounts can ask to be deleted')->span(2)
+                ->help('From their profile page. Staff are emailed; they delete the account.'),
+        ]);
     }
 
-    public function boolean(string $key, bool $default = false): bool
+    private static function signIn(): Section
     {
-        $value = $this->get($key, $default);
-
-        return is_bool($value) ? $value : (bool) filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        return Section::make('Sign-in')->description('Besides the email address and password.')->columns(2)->schema([
+            Toggle::make('loginCode')->label('Sign in with a code sent by email')->span(2),
+            NumberInput::make('codeMinutes')->label('A code works for (minutes)')->integer()->min(1)->max(60)->required()->showWhen('loginCode'),
+            Toggle::make('googleLogin')->label('Sign in with Google')->span(2)
+                ->rules([self::rule(self::checkGoogle(...))])
+                ->help('Needs GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET. Give Google the callback address /'.self::configuredPrefix().'/login/google/callback.'),
+        ]);
     }
 
-    public function string(string $key, string $default = ''): string
+    private static function announcementSection(): Section
     {
-        $value = $this->get($key, $default);
+        $others = self::otherLanguages();
 
-        return is_scalar($value) ? (string) $value : $default;
+        return Section::make('Announcement')->description('A message in My Account: a holiday, a change of terms.')->columns(2)->schema([
+            Toggle::make('announcement')->label('Show an announcement')->span(2),
+            Select::make('announcementPosition')->label('Where')->required()->showWhen('announcement')
+                ->options(['tab' => 'As My Account\'s first page', 'above' => 'Above every account page', 'below' => 'Below every account page'])
+                ->rules(['in:'.implode(',', Announcement::POSITIONS)]),
+            TextInput::make('announcementTitle')->label('Title')->maxLength(150)->showWhen('announcement')
+                ->placeholder((string) __('account::account.announcement.title')),
+            Textarea::make('announcementMessage')->label('Message')->rows(3)->maxLength(2000)->span(2)->showWhen('announcement')
+                ->help('Plain text; line breaks are kept. Empty: no announcement.'),
+            ...($others === [] ? [] : [
+                Pairs::make('announcementTitles')->label('Title in other languages')->fixed($others)->maxLength(2000)->span(2)->showWhen('announcement'),
+                Pairs::make('announcementMessages')->label('Message in other languages')->fixed($others)->maxLength(5000)->span(2)->showWhen('announcement')
+                    ->help('Empty: the message above.'),
+            ]),
+        ]);
     }
 
-    /** @return list<string> a list setting's values (roles, addresses…) */
-    public function strings(string $key): array
+    private static function emails(): Section
     {
-        $value = $this->get($key, []);
+        $fields = [];
+        foreach (Account::emails()->all() as $key => $email) {
+            $prefix = self::EMAILS[$key] ?? null;
+            if ($prefix === null) {
+                continue; // a plugin's email: its settings are the plugin's
+            }
+            $label = $email->label;
+            if (! $email->locked) {
+                $fields[] = Toggle::make($prefix.'Email')->label('Send "'.$label.'"')->span(2)->help($email->description);
+            }
+            $fields[] = Pairs::make($prefix.'Subject')->label('"'.$label.'" subject')->fixed(Locales::names())->maxLength(2000)->span(2)
+                ->help(($email->locked ? $email->description.' ' : '').'Empty: the default subject. :name and :site are filled in.');
+            if ($email->audience === 'staff') {
+                $fields[] = CheckboxList::make($prefix.'Roles')->label('"'.$label.'" goes to the roles')->span(2)
+                    ->options(fn (): array => self::allRoles())->default(self::defaultStaffRoles());
+                $fields[] = ListInput::make($prefix.'Addresses')->label('…and to the addresses')->emails()->max(20)->span(2);
+            }
+        }
 
-        return array_values(array_filter(array_map(
-            fn (mixed $item): string => is_scalar($item) ? trim((string) $item) : '',
-            is_array($value) ? $value : [$value],
-        ), fn (string $item): bool => $item !== ''));
+        return Section::make('Emails')->description('What the account emails say, and who gets the staff emails. Their texts are in the translations; an app can replace an email with resources/views/account/emails/{key}.blade.php.')
+            ->columns(2)->schema($fields);
     }
 
-    /** @return array<array-key, mixed> */
-    public function section(string $section): array
+    /** @return array<string, string> the site's languages after the main one */
+    private static function otherLanguages(): array
     {
-        $values = $this->get($section, []);
+        return array_slice(Locales::names(), 1, null, true);
+    }
 
-        return is_array($values) ? $values : [];
+    private static function configuredPrefix(): string
+    {
+        return AccountRoutes::path('prefix');
+    }
+
+    /** @return list<string> super admins and administrators */
+    public static function defaultStaffRoles(): array
+    {
+        $superAdmin = config('sunrice-admin.super_admin_role', 'super-admin');
+
+        return [is_string($superAdmin) ? $superAdmin : 'super-admin', 'administrator'];
+    }
+
+    /** @return array<string, string> the panel guard's roles */
+    private static function allRoles(): array
+    {
+        $names = Role::query()->where('guard_name', app(Panel::class)->getGuard())->orderBy('name')->pluck('name')->all();
+        $roles = [];
+        foreach ($names as $name) {
+            if (is_string($name)) {
+                $roles[$name] = $name;
+            }
+        }
+
+        return $roles;
+    }
+
+    /** @return array<string, string> roles that may be given to new accounts: without permissions */
+    private static function siteRoles(): array
+    {
+        $roles = [];
+        foreach (Role::query()->where('guard_name', app(Panel::class)->getGuard())->doesntHave('permissions')->orderBy('name')->pluck('name')->all() as $name) {
+            if (is_string($name) && ! in_array($name, self::defaultStaffRoles(), true)) {
+                $roles[$name] = $name;
+            }
+        }
+
+        return $roles;
     }
 
     /**
-     * Replace one section's stored values (keys not given keep their
-     * stored or default values).
-     *
-     * @param  array<string, mixed>  $values
+     * @param  Closure(mixed): ?string  $check  the error, or null
+     * @return Closure(string, mixed, Closure(string): mixed): void
      */
-    public function saveSection(string $section, array $values): void
+    private static function rule(Closure $check): Closure
     {
-        $stored = $this->stored();
-        $current = $stored[$section] ?? [];
-        $stored[$section] = array_replace(is_array($current) ? $current : [], $values);
-        $settings = new StoredValues;
-        $settings->values = $stored;
-        $settings->save();
-        $this->flush();
+        return function (string $attribute, mixed $value, Closure $fail) use ($check): void {
+            $error = $check($value);
+            if ($error !== null) {
+                $fail($error);
+            }
+        };
     }
 
-    /** Forget what this request has read (after a save, or between queued jobs). */
-    public function flush(): void
+    /** New accounts must never get into the admin: no super admin, no role with a permission. */
+    private static function checkRoles(mixed $value): ?string
     {
-        $this->resolved = null;
+        $names = array_values(array_filter(is_array($value) ? $value : [], 'is_string'));
+        if ($names === []) {
+            return null;
+        }
+        if (array_intersect($names, self::defaultStaffRoles()) !== []) {
+            return 'New accounts can\'t be super admins or administrators.';
+        }
+        $privileged = Role::query()->where('guard_name', app(Panel::class)->getGuard())->whereIn('name', $names)->has('permissions')->pluck('name')->all();
+
+        return $privileged === [] ? null : 'These roles open the admin, so new accounts can\'t get them: '.implode(', ', array_filter($privileged, 'is_string')).'.';
+    }
+
+    private static function checkPath(mixed $value): ?string
+    {
+        $path = is_string($value) ? trim($value, '/ ') : '';
+        if ($path === '') {
+            return null;
+        }
+        if (preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $path) !== 1) {
+            return 'Use lowercase letters, numbers and dashes, like "my-account".';
+        }
+        $admin = trim(app(Panel::class)->getPath(), '/');
+        if ($path === $admin || in_array($path, Locales::segments(), true)) {
+            return 'That address is the admin\'s or a language\'s.';
+        }
+
+        return null;
+    }
+
+    private static function checkLink(mixed $value): ?string
+    {
+        $link = is_string($value) ? trim($value) : '';
+        if ($link === '' || self::checkSitePath($link) === null) {
+            return null;
+        }
+
+        return preg_match('#^https?://[^\s/$.?\#].[^\s]*$#i', $link) === 1 ? null : 'Use a site path (/terms) or a full URL (https://…).';
+    }
+
+    /** A path on this site: no scheme, no host, nothing that leaves it ("//evil.test"). */
+    private static function checkSitePath(mixed $value): ?string
+    {
+        $path = is_string($value) ? trim($value) : '';
+        if ($path === '') {
+            return null;
+        }
+
+        return preg_match('#^/?(?!/)[A-Za-z0-9\-._~/%]*(?:\?[A-Za-z0-9\-._~/%=&+]*)?$#', $path) === 1 && ! str_contains($path, '//') && ! str_contains($path, '\\')
+            ? null : 'Use a path on the site, like /welcome.';
+    }
+
+    private static function checkGoogle(mixed $value): ?string
+    {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN) && ! Google::configured()
+            ? 'Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET first.' : null;
     }
 }

@@ -7,28 +7,52 @@ namespace Sunrice\Account\Emails;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Sunrice\Account\Auth\Users;
 use Sunrice\Account\Settings\AccountSettings;
 
 /**
- * An email's settings, kept in the account settings under
- * `emails.{key}`: `enabled`, `subject` (per language), and for staff
- * emails the `addresses` and `roles` it goes to.
+ * An email's settings: for the package's emails, Settings → Accounts →
+ * Emails (AccountSettings::EMAILS); for a plugin's, what its
+ * definition's `settings` closure gives.
  *
  * @api
  */
 final class EmailSettings
 {
-    public function __construct(private AccountSettings $settings, private Emails $emails) {}
+    public function __construct(private Emails $emails) {}
 
-    /** @return array<array-key, mixed> */
+    /**
+     * @return array{enabled?: bool, subject?: string, addresses?: list<string>, roles?: list<string>|null}
+     */
     public function for(string $key): array
     {
-        $values = $this->settings->section('emails')[$key] ?? [];
+        $email = $this->emails->get($key);
+        $prefix = AccountSettings::EMAILS[$key] ?? null;
+        if ($prefix !== null) {
+            $values = app(AccountSettings::class)->toArray();
+            $settings = [];
+            if (is_bool($values[$prefix.'Email'] ?? null)) {
+                $settings['enabled'] = $values[$prefix.'Email'];
+            }
+            if (is_string($values[$prefix.'Subject'] ?? null)) {
+                $settings['subject'] = $values[$prefix.'Subject'];
+            }
+            if (is_array($values[$prefix.'Addresses'] ?? null)) {
+                $settings['addresses'] = self::strings($values[$prefix.'Addresses']);
+            }
+            if (array_key_exists($prefix.'Roles', $values)) {
+                $roles = $values[$prefix.'Roles'];
+                $settings['roles'] = is_array($roles) ? self::strings($roles) : null;
+            }
 
-        return is_array($values) ? $values : [];
+            return $settings;
+        }
+
+        if ($email === null || $email->settings === null) {
+            return [];
+        }
+
+        return ($email->settings)();
     }
 
     /** Whether it's sent: never when unknown, always when locked, else its switch. */
@@ -41,28 +65,24 @@ final class EmailSettings
         if ($email->locked) {
             return true;
         }
-        $enabled = $this->for($key)['enabled'] ?? null;
 
-        return is_bool($enabled) ? $enabled : $email->enabledByDefault;
+        return $this->for($key)['enabled'] ?? $email->enabledByDefault;
     }
 
     /** The subject set for a language, or null for the default text. */
     public function subject(string $key, string $locale): ?string
     {
-        $subjects = $this->for($key)['subject'] ?? [];
-        $subject = is_array($subjects) ? ($subjects[$locale] ?? null) : null;
+        $subject = AccountSettings::line($this->for($key)['subject'] ?? '', $locale);
 
-        return is_string($subject) && trim($subject) !== '' ? trim($subject) : null;
+        return $subject !== '' ? $subject : null;
     }
 
     /** @return list<string> a staff email's own addresses (valid, lower case) */
     public function addresses(string $key): array
     {
-        $stored = $this->for($key)['addresses'] ?? [];
-        $list = is_string($stored) ? (preg_split('/[\s,;]+/', $stored) ?: []) : (is_array($stored) ? $stored : []);
         $addresses = [];
-        foreach ($list as $address) {
-            $address = is_string($address) ? Users::normalizeEmail($address) : '';
+        foreach ($this->for($key)['addresses'] ?? [] as $address) {
+            $address = Users::normalizeEmail($address);
             if (filter_var($address, FILTER_VALIDATE_EMAIL) !== false) {
                 $addresses[] = $address;
             }
@@ -74,38 +94,7 @@ final class EmailSettings
     /** @return list<string> the roles whose users get a staff email (default: super admins and administrators) */
     public function roles(string $key): array
     {
-        $stored = $this->for($key)['roles'] ?? null;
-        if (! is_array($stored)) {
-            $superAdmin = config('sunrice-admin.super_admin_role', 'super-admin');
-
-            return [is_string($superAdmin) ? $superAdmin : 'super-admin', 'administrator'];
-        }
-
-        return array_values(array_filter($stored, fn (mixed $role): bool => is_string($role) && $role !== ''));
-    }
-
-    /**
-     * Sends a staff email (while it's on) to the users with its roles and to
-     * its own addresses, each once.
-     */
-    public function notifyStaff(string $key, Notification $notification): void
-    {
-        if (! $this->enabled($key)) {
-            return;
-        }
-        $staff = $this->staff($key);
-        $known = [];
-        foreach ($staff as $user) {
-            $email = $user->getAttribute('email');
-            $known[] = is_string($email) ? mb_strtolower($email) : '';
-        }
-        if ($staff->isNotEmpty()) {
-            NotificationFacade::send($staff, $notification);
-        }
-        $addresses = array_values(array_diff($this->addresses($key), $known));
-        if ($addresses !== []) {
-            NotificationFacade::route('mail', $addresses)->notify($notification);
-        }
+        return $this->for($key)['roles'] ?? AccountSettings::defaultStaffRoles();
     }
 
     /** @return Collection<int, Model&Authenticatable> the users with a staff email's roles */
@@ -117,5 +106,21 @@ final class EmailSettings
         }
 
         return Users::model()::query()->whereHas('roles', fn ($query) => $query->whereIn('name', $roles))->get();
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $values
+     * @return list<string>
+     */
+    private static function strings(array $values): array
+    {
+        $strings = [];
+        foreach ($values as $value) {
+            if (is_string($value) && trim($value) !== '') {
+                $strings[] = trim($value);
+            }
+        }
+
+        return $strings;
     }
 }

@@ -24,34 +24,64 @@ Account::profile($user);   // its Profile (created on first need)
 
 ## Settings
 
-`Account::settings()` reads the account settings: what was saved in the admin over
-`config('sunrice-account.defaults')`.
+**Settings → Accounts** (`/admin/settings/accounts`, permission `account.settings.accounts`) is a
+panel settings section, `Sunrice\Account\Settings\AccountSettings`, in four parts: General,
+Sign-in, Announcement and Emails. AI agents read and change it with the panel's settings tools.
+Read it anywhere with `Account::settings()`; your code (a seeder) saves it like any settings:
 
 ```php
-Account::settings()->boolean('general.registration');
-Account::settings()->strings('general.default_roles');   // ['member']
-Account::settings()->section('general');
-Account::settings()->saveSection('general', ['registration' => false]);
+Account::settings()->registration;           // true
+Account::settings()->roles();                // ['member']
+Account::settings()->fill(['verifyEmail' => false])->save();
 ```
 
-Plugins built on accounts keep their own sections in the same row, under their own key
-(`saveSection('shop', [...])`). Saving a section only replaces the keys it's given.
-
-| Key | Default | |
+| Setting | Default | |
 | --- | --- | --- |
-| `general.registration` | `true` | Visitors can create an account |
-| `general.verify_email` | `true` | New accounts confirm their email before signing in |
-| `general.default_roles` | `['member']` | Roles new accounts get |
-| `general.path` | `null` | The account address prefix, over `paths.prefix` |
-| `general.phone` | `'optional'` | The phone number at registration: `off`, `optional` or `required` |
-| `general.marketing_consent` | `true` | Offer the "news and offers" checkbox at registration |
-| `general.terms_url` | `null` | A terms page to agree to at registration |
-| `general.redirect_after_login` | `null` | A site path to go to after signing in (else My Account) |
-| `general.login_code` | `false` | Offer sign-in with an emailed code |
-| `general.code_minutes` | `10` | How long a sign-in code works (1–60 minutes) |
-| `general.google_login` | `false` | Offer sign-in with Google (needs the credentials) |
-| `general.deletion_requests` | `true` | Accounts can ask to be deleted from their profile page |
-| `announcement.enabled`, `.position`, `.title`, `.message` | off, `above` | An announcement in My Account |
+| `registration` | `true` | Visitors can create an account |
+| `verifyEmail` | `true` | New accounts confirm their email before signing in |
+| `defaultRoles` | `['member']` | Roles new accounts get: only roles without permissions, never super admins or administrators |
+| `path` | `''` | The account address prefix, over `paths.prefix`. Saving a new one clears the route cache |
+| `phone` | `'optional'` | The phone number at registration: `off`, `optional` or `required` |
+| `marketingConsent` | `true` | Offer the "news and offers" checkbox |
+| `termsUrl` | `''` | A terms page to agree to at registration (a site path or a full URL) |
+| `redirectAfterLogin` | `''` | A site path to go to after signing in (else My Account) |
+| `deletionRequests` | `true` | Accounts can ask to be deleted from their profile page |
+| `loginCode` | `false` | Offer sign-in with an emailed code |
+| `codeMinutes` | `10` | How long a sign-in code works (1–60 minutes) |
+| `googleLogin` | `false` | Offer sign-in with Google (refused until the credentials are set) |
+| `announcement`, `announcementPosition` | off, `above` | An announcement in My Account: `tab`, `above` or `below` |
+| `announcementTitle`, `announcementMessage` | `''` | Its title and message in the main language |
+| `announcementTitles`, `announcementMessages` | `''` | In the other languages, as "code: text" lines |
+| `welcomeEmail`, `welcomeSubject`… | on, `''` | The emails: see [Emails](#emails) |
+
+Texts in several languages are kept as "code: text" lines (the panel's `Pairs` field):
+`AccountSettings::line($settings->welcomeSubject, 'en')` gives one language's.
+
+### Showing the settings on your plugin's page
+
+A plugin with a settings page of its own (commerce's Settings → Store) can show the account
+settings there, so there are never two places for them. In its `register()`:
+
+```php
+Account::settingsShownBy('shop');   // Settings → Accounts leaves the menu (its page is not found)
+```
+
+Then draw the form on your page with the panel's `SettingsFields`, and save it with `SaveSettings`,
+checked exactly as Settings → Accounts checks it:
+
+```php
+use Sunrice\Account\Settings\AccountSettings;
+use Sunrice\Admin\Settings\SettingsFields;
+
+$fields = SettingsFields::make(AccountSettings::class, AccountSettings::form(new Form));
+// edit(): ['accounts' => $fields->props()], drawn with FormSections from @imajiner/admin-sdk/ui
+// update():
+app(SaveSettings::class)->handle(app(AccountSettings::class), $fields->validate($request->input('accounts', [])));
+```
+
+`AccountSettings::sections()` gives the form's parts by key (`general`, `sign-in`,
+`announcement`, `emails`) to show them in different places. Give the fields to AI agents with
+`Panel::settingsPage(..., fields: fn () => $fields)`, and guard your page with your own permission.
 
 ## Profiles
 
@@ -70,12 +100,12 @@ $profile->metaValue('shop.tax_id');
 | | |
 | --- | --- |
 | `member` role | Given to new accounts. No admin permissions. Created by `php artisan sunrice:roles` |
-| `account.settings.manage` | Edit the account settings (a privileged permission) |
+| `account.settings.accounts` | Edit Settings → Accounts (a privileged permission) |
 
 ## Pages and routes
 
-Account pages live under the account prefix: `/account` (`sunrice-account.paths.prefix`, or the
-settings page's `general.path`), in every language of the site, like the CMS's pages: `/account`
+Account pages live under the account prefix: `/account` (`sunrice-account.paths.prefix`, or Settings
+→ Accounts' `path`), in every language of the site, like the CMS's pages: `/account`
 in the language at the plain addresses, `/en/account` in English. Route names are `account.*`,
 with `.locale` for the other languages, so build addresses with `Account::url()`:
 
@@ -135,14 +165,14 @@ To change an account view, publish the views (`php artisan vendor:publish
 | Page | Route | |
 | --- | --- | --- |
 | `/account/login` | `account.login` | Email and password; "keep me signed in" |
-| `/account/register` | `account.register` | While `general.registration` is on |
+| `/account/register` | `account.register` | While `registration` is on |
 | `/account/forgot-password` | `account.password.request` | Emails a reset link |
 | `/account/reset-password/{token}` | `account.password.reset` | Choose a new password |
 | `POST /account/logout` | `account.logout` | Signs out of the site only |
 
 The paths under the prefix come from `sunrice-account.paths`. These pages are for guests: a
 signed-in account goes to My Account. After signing in, people go back to the page they were
-going to, else `general.redirect_after_login`, else My Account.
+going to, else `redirectAfterLogin`, else My Account.
 
 What protects them:
 
@@ -156,12 +186,12 @@ What protects them:
   reset requests always get the same answer, and a registration with an email that has an account
   creates nothing and emails its owner instead.
 
-New accounts get the default roles (`general.default_roles`) and a profile with their phone,
+New accounts get the default roles (`defaultRoles`) and a profile with their phone,
 language and marketing consent.
 
 ### Sign in with a code or with Google
 
-**Emailed code** (`general.login_code`): the sign-in page offers "Email me a sign-in code". It
+**Emailed code** (`loginCode`): the sign-in page offers "Email me a sign-in code". It
 uses [spatie/laravel-one-time-passwords](https://github.com/spatie/laravel-one-time-passwords), so
 before turning it on:
 
@@ -179,13 +209,13 @@ before turning it on:
 - publish and run its migration: `php artisan vendor:publish --tag=one-time-passwords-migrations`,
   then `php artisan migrate`.
 
-The code has 6 digits, works for `general.code_minutes` minutes, once, and only in the browser
+The code has 6 digits, works for `codeMinutes` minutes, once, and only in the browser
 that asked for it; 5 tries a minute per account, and 10 per 10 minutes per email and IP. Asking
 again replaces it (at most once a minute). Any email gets the same answer. A code proves the email,
 so it verifies an unverified one. Codes go out as the `account_login_code` account email, not the
 package's own notification, and sign in on the account guard only.
 
-**Google** (`general.google_login`): set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (or
+**Google** (`googleLogin`): set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (or
 `services.google`) and give Google the callback URL `https://your-site/account/login/google/callback`.
 
 - An account linked to the Google user signs in (even if its email changed since).
@@ -198,7 +228,7 @@ locked accounts, can't sign in either way.
 
 ### Email verification
 
-While `general.verify_email` is on (the default), a new account isn't signed in: it gets an email
+While `verifyEmail` is on (the default), a new account isn't signed in: it gets an email
 with a signed link (`account.verify`, valid for `auth.verification.expire` minutes, a day by
 default), and the visitor sees "check your email", as for an email that already has an account.
 The link verifies the address, signs the account in and opens My Account in the language it was
@@ -252,20 +282,17 @@ Every email is queued and sent in one language: the account's emails in the lang
 it came from, staff emails in the site's main language. They show the site's mail brand
 (`Panel::mailBrand()`: Settings → Branding's logo or name).
 
-Their settings live in the account settings, under `emails.{key}`:
+Settings → Accounts → Emails sets them up (`AccountSettings::EMAILS` names each email's settings):
 
-```php
-Account::settings()->saveSection('emails', [
-    'account_welcome' => ['enabled' => true, 'subject' => ['en' => 'Welcome aboard, {name}']],
-    'account_staff_registration' => ['addresses' => 'office@example.com', 'roles' => ['administrator']],
-]);
-```
+- `{email}Email` (`welcomeEmail`, `staffRegistrationEmail`, `staffDeletionEmail`): the switch;
+  the security emails have none.
+- `{email}Subject`: per language, as "code: subject" lines; `:site` (or `{site}`) and the email's
+  own placeholders (`{name}`…) are replaced. Without one, the default text.
+- Staff emails go to the users with `{email}Roles` (null: super admins and administrators) and
+  to `{email}Addresses`, each once.
 
-- `enabled`: the switch (the security emails ignore it).
-- `subject`: per language; `:site` (or `{site}`) and the email's own placeholders (`{name}`…) are
-  replaced. Without one, the default text.
-- Staff emails go to the users with `roles` (default: super admins and administrators) and to
-  `addresses`, each once.
+`Account::emailSettings()` reads them for any email (`enabled($key)`, `subject($key, $locale)`,
+`addresses($key)`, `roles($key)`).
 
 To change an email's body, add `resources/views/account/emails/{key}.blade.php`, a markdown mail
 view (`<x-mail::message>`). It gets `$lang`, `$site` and the email's data (`$name`, `$url`…).
@@ -273,13 +300,16 @@ view (`<x-mail::message>`). It gets `$lang`, `$site` and the email's data (`$nam
 ### Your plugin's emails
 
 Register a definition, then build the notification on `AccountEmail`. It gets the switch, the
-subject from the settings and the brand:
+subject and the brand. Its settings are your plugin's to keep: give them with `settings:`
+(without it, the email is on, with its default subject):
 
 ```php
 use Sunrice\Account\Emails\AccountEmail;
 use Sunrice\Account\Emails\EmailDefinition;
 
-Account::emails()->register(new EmailDefinition('shop_order_note', 'Order note', 'shop::emails.note'));
+Account::emails()->register(new EmailDefinition('shop_order_note', 'Order note', 'shop::emails.note',
+    settings: fn (): array => ['enabled' => app(ShopSettings::class)->orderNotes, 'subject' => app(ShopSettings::class)->orderNoteSubject],
+));
 
 final class OrderNote extends AccountEmail
 {
@@ -330,11 +360,11 @@ Account::dashboardCard('points', 'shop::account.points-card', fn ($user) => ['po
 
 ### Profile
 
-`/account/profile` saves the name, email, phone (`general.phone`), marketing consent
-(`general.marketing_consent`) and your profile fields. A new email needs the current password (for
+`/account/profile` saves the name, email, phone (`phone`), marketing consent
+(`marketingConsent`) and your profile fields. A new email needs the current password (for
 accounts that have one) and, while emails are verified, is verified again: the account stays signed
 in, its email unverified until it clicks the link. The page also changes the password (or lets an
-account made by Google choose one) and, while `general.deletion_requests` is on, asks for the
+account made by Google choose one) and, while `deletionRequests` is on, asks for the
 account to be deleted: `deletion_requested_at` is set on its profile, staff get the
 `account_staff_deletion` email, and you handle it in the admin.
 
