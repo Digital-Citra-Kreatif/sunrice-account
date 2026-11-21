@@ -1,0 +1,45 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Sunrice\Account\Profiles\Actions;
+
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Sunrice\Account\Events\PasswordChanged;
+use Sunrice\Account\Profiles\Models\Profile;
+use Sunrice\Account\Support\Input;
+use Sunrice\Admin\Auth\PasswordPolicy;
+
+/**
+ * Changes an account's password from its profile page: the current one
+ * first, unless it never set one (accounts made by Google). A new remember
+ * token signs out "remember me" on other devices.
+ */
+final class ChangePassword
+{
+    /**
+     * @param  array<array-key, mixed>  $input  current_password, password, password_confirmation
+     *
+     * @throws ValidationException
+     */
+    public function handle(Model&Authenticatable $user, array $input): void
+    {
+        $profile = Profile::forUser($user);
+        $data = Validator::make($input, [
+            'current_password' => [$profile->password_set ? 'required' : 'nullable', 'string', 'max:255'],
+            'password' => ['required', 'string', 'max:255', 'confirmed', ...PasswordPolicy::rules($user)],
+        ])->validate();
+        if ($profile->password_set && ! Hash::check(Input::string($data, 'current_password'), $user->getAuthPassword())) {
+            throw ValidationException::withMessages(['current_password' => __('account::account.password.current_wrong')]);
+        }
+
+        $user->forceFill(['password' => Hash::make(Input::string($data, 'password')), 'remember_token' => Str::random(60)])->save();
+        $profile->forceFill(['password_set' => true])->save();
+        event(new PasswordChanged($user));
+    }
+}

@@ -99,6 +99,15 @@ return [
             'code_minutes' => 10,
             // Sign in with Google (needs the Google credentials below).
             'google_login' => false,
+            // Accounts can ask to be deleted from their profile page (staff are told).
+            'deletion_requests' => true,
+        ],
+        // An announcement in My Account: as its first page (tab), or above or below every page.
+        'announcement' => [
+            'enabled' => false,
+            'position' => 'above',
+            'title' => [],
+            'message' => [],
         ],
         // Per email key (Account::emails()): enabled, subject (per language), and for staff
         // emails addresses and roles (default: super admins and administrators).

@@ -25,6 +25,8 @@ final class Emails
 
     public const STAFF_REGISTRATION = 'account_staff_registration';
 
+    public const STAFF_DELETION = 'account_staff_deletion';
+
     /** @var array<string, EmailDefinition> */
     private array $emails = [];
 
@@ -37,6 +39,7 @@ final class Emails
             new EmailDefinition(self::EXISTING, 'Account already exists', 'account::auth.register.existing', locked: true, description: 'When someone tries to register with an email that has an account.'),
             new EmailDefinition(self::LOGIN_CODE, 'Sign-in code', 'account::auth.code.mail', locked: true, description: 'A code to sign in with (while sign-in by code is on).'),
             new EmailDefinition(self::STAFF_REGISTRATION, 'New account', 'account::emails.staff_registration', 'staff', description: 'To staff: someone created an account.'),
+            new EmailDefinition(self::STAFF_DELETION, 'Account deletion request', 'account::emails.staff_deletion', 'staff', description: 'To staff: an account asked to be deleted.'),
         );
     }
 

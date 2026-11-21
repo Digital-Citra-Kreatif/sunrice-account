@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Illuminate\Contracts\Auth\Authenticatable|null user()
  * @method static \Sunrice\Account\Profiles\Models\Profile profile(\Illuminate\Contracts\Auth\Authenticatable $user)
  * @method static void routes(\Closure(string): void $routes, bool $signedIn = true)
+ * @method static void page(string $key, string|\Closure(): string $label, string $route, (\Closure(): bool)|null $visible = null, int $position = 100, ?string $icon = null)
+ * @method static void removePage(string $key)
+ * @method static void dashboardCard(string $key, string $view, (\Closure(\Illuminate\Contracts\Auth\Authenticatable): array<string, mixed>)|null $data = null, int $position = 100)
+ * @method static void landingUsing(\Closure(\Illuminate\Contracts\Auth\Authenticatable): ?string $landing)
+ * @method static void registrationFields(\Closure(): list<array<string, mixed>> $fields)
+ * @method static void profileFields(\Closure(): list<array<string, mixed>> $fields)
  * @method static string url(string $name, array<string, mixed> $parameters = [], ?string $locale = null)
  *
  * @see \Sunrice\Account\Account

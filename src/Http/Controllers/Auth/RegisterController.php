@@ -12,6 +12,7 @@ use Sunrice\Account\Auth\Actions\SendVerificationLink;
 use Sunrice\Account\Auth\SiteGuard;
 use Sunrice\Account\Auth\Throttle;
 use Sunrice\Account\Events\SignedIn;
+use Sunrice\Account\MyAccount\Fields;
 use Sunrice\Account\Routing\AccountRoutes;
 use Sunrice\Account\Settings\AccountSettings;
 use Sunrice\Account\View\Layout;
@@ -30,6 +31,7 @@ final class RegisterController
             'phone' => $settings->string('general.phone', 'optional'),
             'marketing' => $settings->boolean('general.marketing_consent', true),
             'termsUrl' => $settings->string('general.terms_url'),
+            'fields' => app(Fields::class)->registration(),
         ]);
     }
 
@@ -43,7 +45,7 @@ final class RegisterController
         }
         Throttle::hit('register', $request, '', 3600);
 
-        $user = $register->handle($request->only(['name', 'email', 'phone', 'password', 'password_confirmation', 'accepts_marketing', 'terms']), app()->getLocale());
+        $user = $register->handle($request->only(['name', 'email', 'phone', 'password', 'password_confirmation', 'accepts_marketing', 'terms', 'fields']), app()->getLocale());
         if ($user === null) {
             return redirect()->to(AccountRoutes::url('account.login'))->with('account.status', __('account::auth.register.check_email'));
         }

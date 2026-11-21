@@ -15,4 +15,9 @@ return [
         'intro' => 'Someone created an account on :site.',
         'details' => ':name (:email)',
     ],
+    'staff_deletion' => [
+        'subject' => 'Account deletion request on :site: :name',
+        'intro' => 'An account on :site asked to be deleted.',
+        'details' => ':name (:email). Handle it in the admin.',
+    ],
 ];

@@ -50,6 +50,8 @@ Plugins built on accounts keep their own sections in the same row, under their o
 | `general.login_code` | `false` | Offer sign-in with an emailed code |
 | `general.code_minutes` | `10` | How long a sign-in code works (1–60 minutes) |
 | `general.google_login` | `false` | Offer sign-in with Google (needs the credentials) |
+| `general.deletion_requests` | `true` | Accounts can ask to be deleted from their profile page |
+| `announcement.enabled`, `.position`, `.title`, `.message` | off, `above` | An announcement in My Account |
 
 ## Profiles
 
@@ -244,6 +246,7 @@ Event::listen(Registering::class, function (Registering $event) {
 | `account_password_reset` (`RESET`) | the account | a password reset link | no |
 | `account_existing` (`EXISTING`) | the account | someone tried to register with its email | no |
 | `account_staff_registration` (`STAFF_REGISTRATION`) | staff | someone created an account | yes |
+| `account_staff_deletion` (`STAFF_DELETION`) | staff | an account asked to be deleted | yes |
 
 Every email is queued and sent in one language: the account's emails in the language of the page
 it came from, staff emails in the site's main language. They show the site's mail brand
@@ -291,3 +294,78 @@ final class OrderNote extends AccountEmail
 
 `Account::emails()->all()` lists every email, for a plugin that shows them in a settings page of
 its own.
+
+## My Account
+
+### The menu
+
+My Account's menu has the package's **Overview** (`account.overview`, position 0) and **Profile**
+(`account.profile`, 90), and your plugin's pages:
+
+```php
+Account::routes(fn (string $suffix) => Route::get('orders', OrdersController::class)->name('shop.orders'.$suffix));
+Account::page('orders', fn () => __('shop::account.orders'), 'shop.orders', position: 10);
+Account::page('points', 'Points', 'shop.points', visible: fn () => Shop::loyaltyOn());
+Account::removePage('overview');
+```
+
+A page shows while its route exists and its `visible` check (if any) says yes; the current page is
+marked (`aria-current`). Your pages extend `account::layout` (see Views and layout), which draws
+the menu, the messages and the announcement.
+
+### Where /account opens, and the dashboard
+
+`/account` opens where `Account::landingUsing()` says (return null for the default), else the
+announcement while it's the first tab, else the dashboard (always at `/account/overview`):
+
+```php
+Account::landingUsing(fn ($user) => Account::url('shop.orders'));
+```
+
+The dashboard shows cards: views, given `$user` and what your closure returns.
+
+```php
+Account::dashboardCard('points', 'shop::account.points-card', fn ($user) => ['points' => Points::of($user)], position: 20);
+```
+
+### Profile
+
+`/account/profile` saves the name, email, phone (`general.phone`), marketing consent
+(`general.marketing_consent`) and your profile fields. A new email needs the current password (for
+accounts that have one) and, while emails are verified, is verified again: the account stays signed
+in, its email unverified until it clicks the link. The page also changes the password (or lets an
+account made by Google choose one) and, while `general.deletion_requests` is on, asks for the
+account to be deleted: `deletion_requested_at` is set on its profile, staff get the
+`account_staff_deletion` email, and you handle it in the admin.
+
+| Event | When |
+| --- | --- |
+| `ProfileUpdating` | Before the profile is saved: change `$event->data` (name, email, phone, accepts_marketing, fields), or refuse with a `ValidationException` |
+| `ProfileUpdated` | Saved; `$changed` lists what changed (`name`, `email`, `phone`, `accepts_marketing`, `fields.{key}`) |
+| `PasswordChanged` | The password was changed or first chosen |
+| `DeletionRequested` | The account asked to be deleted |
+
+### Your fields on the registration form and the profile page
+
+```php
+Account::registrationFields(fn () => [
+    ['key' => 'shop_company', 'label' => fn () => __('shop::fields.company'), 'rules' => ['nullable', 'string', 'max:120']],
+]);
+Account::profileFields(fn () => [
+    ['key' => 'shop_company', 'label' => 'Company', 'rules' => ['nullable', 'string', 'max:120']],
+    ['key' => 'shop_size', 'label' => 'Size', 'type' => 'select', 'options' => ['s' => 'Small', 'l' => 'Large']],
+    ['key' => 'shop_newsletter', 'label' => 'Weekly letter', 'type' => 'checkbox'],
+]);
+```
+
+Types are `text` (default), `textarea`, `select` (its options are checked) and `checkbox` (stored as
+true or false). Keys are lowercase with underscores; prefix them with your plugin's name. Values are
+kept in the profile's `meta` under their key: `Account::profile($user)->metaValue('shop_company')`.
+They're posted as `fields[{key}]` and their errors are under `fields.{key}`.
+
+### Announcement
+
+The `announcement` settings show a message in My Account: as its first page (`position` `tab`,
+which `/account` then opens), or `above` or `below` every account page. `title` and `message` are
+per language, falling back to the main language's; the message is plain text (escaped, line breaks
+kept).
