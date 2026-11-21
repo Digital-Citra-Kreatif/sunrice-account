@@ -4,8 +4,8 @@
     account-* classes itself; this isn't included in the site's layout.
 --}}
 <style nonce="{{ cms_nonce() }}">
-    .account-site { color-scheme: light dark; --account-fg: #18181b; --account-muted: #71717a; --account-bg: #fafafa; --account-card: #fff; --account-line: #e4e4e7; --account-accent: #18181b; --account-on-accent: #fff; --account-danger: #b91c1c; --account-success: #15803d; }
-    @media (prefers-color-scheme: dark) { .account-site { --account-fg: #f4f4f5; --account-muted: #a1a1aa; --account-bg: #09090b; --account-card: #18181b; --account-line: #27272a; --account-accent: #f4f4f5; --account-on-accent: #18181b; --account-danger: #f87171; --account-success: #4ade80; } }
+    .account-site { color-scheme: light dark; --account-fg: #18181b; --account-muted: #71717a; --account-bg: #fafafa; --account-card: #fff; --account-line: #e4e4e7; --account-field-line: #8a8a93; --account-accent: #18181b; --account-on-accent: #fff; --account-danger: #b91c1c; --account-success: #15803d; }
+    @media (prefers-color-scheme: dark) { .account-site { --account-fg: #f4f4f5; --account-muted: #a1a1aa; --account-bg: #09090b; --account-card: #18181b; --account-line: #27272a; --account-field-line: #71717a; --account-accent: #f4f4f5; --account-on-accent: #18181b; --account-danger: #f87171; --account-success: #4ade80; } }
     .account-body { margin: 0; background: var(--account-bg); color: var(--account-fg); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
     .account-main { max-width: 64rem; margin: 0 auto; padding: 2.5rem 1rem 4rem; box-sizing: border-box; }
     .account-main *, .account-main *::before, .account-main *::after { box-sizing: border-box; }
@@ -16,8 +16,10 @@
     .account-auth { max-width: 26rem; margin: 2rem auto; padding: 2rem; background: var(--account-card); border: 1px solid var(--account-line); border-radius: 12px; }
     .account-form { display: flex; flex-direction: column; gap: 1rem; margin: 0 0 1rem; }
     .account-field { display: flex; flex-direction: column; gap: .35rem; font-size: .9rem; font-weight: 500; }
-    .account-field input, .account-field select, .account-field textarea { font: inherit; font-weight: 400; color: inherit; background: var(--account-card); border: 1px solid var(--account-line); border-radius: 8px; padding: .6rem .75rem; width: 100%; }
+    .account-field input, .account-field select, .account-field textarea { font: inherit; font-weight: 400; color: inherit; background: var(--account-card); border: 1px solid var(--account-field-line); border-radius: 8px; padding: .6rem .75rem; width: 100%; }
     .account-field input:focus, .account-field select:focus, .account-field textarea:focus { outline: 2px solid var(--account-accent); outline-offset: 1px; }
+    .account-field [aria-invalid="true"] { border-color: var(--account-danger); }
+    .account-main a:focus-visible, .account-main button:focus-visible, .account-check input:focus-visible { outline: 2px solid var(--account-accent); outline-offset: 2px; }
     .account-field__help { color: var(--account-muted); font-weight: 400; font-size: .85rem; }
     .account-field__error { color: var(--account-danger); font-weight: 400; font-size: .85rem; }
     .account-check { display: flex; gap: .5rem; align-items: center; font-size: .9rem; }

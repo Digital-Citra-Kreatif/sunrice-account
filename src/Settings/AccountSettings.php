@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Account\Settings;
 
 use Closure;
+use Illuminate\Support\Facades\Route as RouteFacade;
 use Spatie\Permission\Models\Role;
 use Sunrice\Account\AccountPlugin;
 use Sunrice\Account\Auth\Google;
@@ -225,21 +226,21 @@ final class AccountSettings extends Settings
         return Section::make('General')->columns(2)->schema([
             Toggle::make('registration')->label('Visitors can create an account')->span(2),
             Toggle::make('verifyEmail')->label('New accounts confirm their email address')->span(2)
-                ->help('They can sign in once they have opened the link emailed to them.'),
+                ->help('They can sign in once they have opened the link emailed to them. Signing in with an emailed code or with Google proves the address too.'),
             CheckboxList::make('defaultRoles')->label('Roles of new accounts')->span(2)
                 ->options(fn (): array => self::siteRoles())
                 ->rules([self::rule(self::checkRoles(...))])
                 ->help('Only roles without admin permissions: new accounts never open the admin.'),
             TextInput::make('path')->label('Account address')->maxLength(60)->placeholder(self::configuredPrefix())
                 ->rules([self::rule(self::checkPath(...))])
-                ->help('Where the account pages are: /'.self::configuredPrefix().', /en/'.self::configuredPrefix().'. Lowercase letters, numbers and dashes.')
-                ->warnWhenChanged('Links to the old address stop working.'),
+                ->help(fn (): string => 'Where the account pages are now: '.self::addresses().'. Lowercase letters, numbers and dashes.')
+                ->warnWhenChanged('Links to the old address stop working, and so does sign-in with Google until its callback address is changed in Google Cloud.'),
             Select::make('phone')->label('Phone number at registration')->required()
                 ->options(['off' => 'Not asked', 'optional' => 'Optional', 'required' => 'Required']),
             TextInput::make('termsUrl')->label('Terms page')->maxLength(255)->placeholder('/terms')
                 ->rules([self::rule(self::checkLink(...))])
                 ->help('When set, new accounts agree to it to register. A site path or a full URL.'),
-            TextInput::make('redirectAfterLogin')->label('After signing in, go to')->maxLength(255)->placeholder('My Account')
+            TextInput::make('redirectAfterLogin')->label('After signing in, go to')->maxLength(255)->placeholder('/members')
                 ->rules([self::rule(self::checkSitePath(...))])
                 ->help('A path on the site. Empty: My Account. A page someone was trying to open wins.'),
             Toggle::make('marketingConsent')->label('Offer "Send me news and offers"')->span(2),
@@ -255,7 +256,7 @@ final class AccountSettings extends Settings
             NumberInput::make('codeMinutes')->label('A code works for (minutes)')->integer()->min(1)->max(60)->required()->showWhen('loginCode'),
             Toggle::make('googleLogin')->label('Sign in with Google')->span(2)
                 ->rules([self::rule(self::checkGoogle(...))])
-                ->help('Needs GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET. Give Google the callback address /'.self::configuredPrefix().'/login/google/callback.'),
+                ->help(fn (): string => 'Needs GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET. Give Google the callback address '.url('/'.AccountRoutes::prefix().'/'.AccountRoutes::path('login').'/google/callback').' (it changes with the account address).'),
         ]);
     }
 
@@ -271,11 +272,12 @@ final class AccountSettings extends Settings
             TextInput::make('announcementTitle')->label('Title')->maxLength(150)->showWhen('announcement')
                 ->placeholder((string) __('account::account.announcement.title')),
             Textarea::make('announcementMessage')->label('Message')->rows(3)->maxLength(2000)->span(2)->showWhen('announcement')
-                ->help('Plain text; line breaks are kept. Empty: no announcement.'),
+                ->rules(['required_if_accepted:announcement'])
+                ->help('Plain text; line breaks are kept.'),
             ...($others === [] ? [] : [
                 Pairs::make('announcementTitles')->label('Title in other languages')->fixed($others)->maxLength(2000)->span(2)->showWhen('announcement'),
                 Pairs::make('announcementMessages')->label('Message in other languages')->fixed($others)->maxLength(5000)->span(2)->showWhen('announcement')
-                    ->help('Empty: the message above.'),
+                    ->help('One line per language (line breaks are for the message above only). Empty: the message above.'),
             ]),
         ]);
     }
@@ -295,9 +297,10 @@ final class AccountSettings extends Settings
             $fields[] = Pairs::make($prefix.'Subject')->label('"'.$label.'" subject')->fixed(Locales::names())->maxLength(2000)->span(2)
                 ->help(($email->locked ? $email->description.' ' : '').'Empty: the default subject. :name and :site are filled in.');
             if ($email->audience === 'staff') {
-                $fields[] = CheckboxList::make($prefix.'Roles')->label('"'.$label.'" goes to the roles')->span(2)
-                    ->options(fn (): array => self::allRoles())->default(self::defaultStaffRoles());
-                $fields[] = ListInput::make($prefix.'Addresses')->label('…and to the addresses')->emails()->max(20)->span(2);
+                $fields[] = CheckboxList::make($prefix.'Roles')->label('"'.$label.'" goes to the staff roles')->span(2)
+                    ->options(fn (): array => self::staffRoles())->default(self::defaultStaffRoles())
+                    ->help('Roles that open the admin. Each person gets it once.');
+                $fields[] = ListInput::make($prefix.'Addresses')->label('"'.$label.'" also goes to the addresses')->emails()->max(20)->span(2);
             }
         }
 
@@ -316,6 +319,15 @@ final class AccountSettings extends Settings
         return AccountRoutes::path('prefix');
     }
 
+    /** "/account (and /en/account…)": where the account pages are now, in each language. */
+    private static function addresses(): string
+    {
+        $prefix = AccountRoutes::prefix();
+        $others = array_keys(self::otherLanguages());
+
+        return '/'.$prefix.($others === [] ? '' : ' (and '.Locales::prefix((string) $others[0]).'/'.$prefix.' in '.Locales::names()[$others[0]].')');
+    }
+
     /** @return list<string> super admins and administrators */
     public static function defaultStaffRoles(): array
     {
@@ -324,10 +336,19 @@ final class AccountSettings extends Settings
         return [is_string($superAdmin) ? $superAdmin : 'super-admin', 'administrator'];
     }
 
-    /** @return array<string, string> the panel guard's roles */
-    private static function allRoles(): array
+    /**
+     * The roles staff emails may go to: those that open the admin (the
+     * super admin's, and roles with the panel's access permission), never
+     * customers' roles, which would email every account.
+     *
+     * @return array<string, string>
+     */
+    public static function staffRoles(): array
     {
-        $names = Role::query()->where('guard_name', app(Panel::class)->getGuard())->orderBy('name')->pluck('name')->all();
+        $superAdmin = self::defaultStaffRoles()[0];
+        $names = Role::query()->where('guard_name', app(Panel::class)->getGuard())
+            ->where(fn ($query) => $query->where('name', $superAdmin)->orWhereHas('permissions', fn ($permissions) => $permissions->where('name', Panel::ACCESS)))
+            ->orderBy('name')->pluck('name')->all();
         $roles = [];
         foreach ($names as $name) {
             if (is_string($name)) {
@@ -392,6 +413,13 @@ final class AccountSettings extends Settings
         $admin = trim(app(Panel::class)->getPath(), '/');
         if ($path === $admin || in_array($path, Locales::segments(), true)) {
             return 'That address is the admin\'s or a language\'s.';
+        }
+        // The app's own pages there would be hidden behind the account pages (or hide them).
+        foreach (RouteFacade::getRoutes()->getRoutes() as $route) {
+            $uri = trim($route->uri(), '/');
+            if (! str_starts_with((string) $route->getName(), 'sunrice.account.') && ($uri === $path || str_starts_with($uri, $path.'/'))) {
+                return 'The site already has pages at /'.$path.'. Choose another address.';
+            }
         }
 
         return null;

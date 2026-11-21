@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Sunrice\Account\Facades\Account;
@@ -122,4 +123,25 @@ it('leaves the Settings menu to a plugin that shows the settings itself', functi
 
 it('gives the form\'s sections by key', function () {
     expect(array_keys(AccountSettings::sections()))->toBe(['general', 'sign-in', 'announcement', 'emails']);
+});
+
+it('sends staff emails only to roles that open the admin', function () {
+    Role::findOrCreate('member', 'web');
+    $editor = Role::findOrCreate('editor', 'web');
+    $editor->givePermissionTo(Permission::findOrCreate(Panel::ACCESS, 'web'));
+
+    expect(array_keys(AccountSettings::staffRoles()))->toBe(['editor', 'super-admin']);
+    $this->actingAs(settingsAdmin(), 'web')->put('/admin/settings/accounts', ['staffRegistrationRoles' => ['member'], 'phone' => 'optional', 'codeMinutes' => 10, 'announcementPosition' => 'tab'])
+        ->assertSessionHasErrors('staffRegistrationRoles.0');
+});
+
+it('refuses an account address where the site already has pages, and an announcement without a message', function () {
+    Route::get('/members/offers', fn () => 'offers');
+    app('router')->getRoutes()->refreshNameLookups();
+    $admin = settingsAdmin();
+
+    $this->actingAs($admin, 'web')->put('/admin/settings/accounts', ['path' => 'members', 'phone' => 'optional', 'codeMinutes' => 10, 'announcementPosition' => 'tab'])
+        ->assertSessionHasErrors('path');
+    $this->put('/admin/settings/accounts', ['announcement' => true, 'announcementMessage' => '', 'phone' => 'optional', 'codeMinutes' => 10, 'announcementPosition' => 'tab'])
+        ->assertSessionHasErrors('announcementMessage');
 });

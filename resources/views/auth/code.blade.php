@@ -10,7 +10,7 @@
         <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.code.consume') }}" class="account-form">
             @csrf
             <label class="account-field"><span>{{ __('account::auth.code.label') }}</span>
-                <input type="text" name="code" required inputmode="numeric" autocomplete="one-time-code" maxlength="20" autofocus>
+                <input type="text" name="code" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'code']) required inputmode="numeric" autocomplete="one-time-code" maxlength="20" autofocus>
                 @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'code'])
             </label>
             <label class="account-check"><input type="checkbox" name="remember" value="1" @checked(old('remember', $remember))> {{ __('account::auth.login.remember') }}</label>
@@ -18,7 +18,7 @@
         </form>
         <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.code.send') }}" class="account-auth__resend">
             @csrf
-            <input type="hidden" name="email" value="{{ $email }}">
+            <input type="hidden" name="email" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'email']) value="{{ $email }}">
             @if ($remember)
                 <input type="hidden" name="remember" value="1">
             @endif

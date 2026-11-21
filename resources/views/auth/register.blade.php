@@ -12,21 +12,21 @@
         <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.register.store') }}" class="account-form">
             @csrf <x-honeypot />
             <label class="account-field"><span>{{ __('account::auth.fields.name') }}</span>
-                <input type="text" name="name" value="{{ old('name') }}" required maxlength="120" autocomplete="name">
+                <input type="text" name="name" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'name']) value="{{ old('name') }}" required maxlength="120" autocomplete="name">
                 @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'name'])
             </label>
             <label class="account-field"><span>{{ __('account::auth.fields.email') }}</span>
-                <input type="email" name="email" value="{{ old('email') }}" required maxlength="190" autocomplete="email">
+                <input type="email" name="email" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'email']) value="{{ old('email') }}" required maxlength="190" autocomplete="email">
                 @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'email'])
             </label>
             @if ($phone !== 'off')
                 <label class="account-field"><span>{{ __('account::auth.fields.phone') }}</span>
-                    <input type="tel" name="phone" value="{{ old('phone') }}" maxlength="30" autocomplete="tel" @required($phone === 'required')>
+                    <input type="tel" name="phone" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'phone']) value="{{ old('phone') }}" maxlength="30" autocomplete="tel" @required($phone === 'required')>
                     @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'phone'])
                 </label>
             @endif
             <label class="account-field"><span>{{ __('account::auth.fields.password') }}</span>
-                <input type="password" name="password" required autocomplete="new-password">
+                <input type="password" name="password" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'password']) required autocomplete="new-password">
                 @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'password'])
             </label>
             <label class="account-field"><span>{{ __('account::auth.fields.password_confirmation') }}</span>
@@ -37,7 +37,7 @@
                 <label class="account-check"><input type="checkbox" name="accepts_marketing" value="1" @checked(old('accepts_marketing'))> {{ __('account::auth.register.marketing') }}</label>
             @endif
             @if ($termsUrl !== '')
-                <label class="account-check"><input type="checkbox" name="terms" value="1" @checked(old('terms')) required>
+                <label class="account-check"><input type="checkbox" name="terms" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'terms']) value="1" @checked(old('terms')) required>
                     {!! __('account::auth.register.terms', ['link' => '<a href="'.e($termsUrl).'" target="_blank" rel="noopener">'.e(__('account::auth.register.terms_name')).'</a>']) !!}</label>
                 @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'terms'])
             @endif

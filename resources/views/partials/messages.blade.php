@@ -5,6 +5,7 @@
 @if (session('account.error'))
     <p class="account-message account-message--error" role="alert">{{ session('account.error') }}</p>
 @endif
-@error('captcha')
-    <p class="account-message account-message--error" role="alert">{{ $message }}</p>
-@enderror
+@if (collect($errors->getBags())->contains(fn ($bag) => $bag->any()))
+    {{-- One announcement for the form's errors; each field's message is tied to its input. --}}
+    <p class="account-message account-message--error" role="alert">{{ $errors->first('captcha') ?: __('account::auth.check_fields') }}</p>
+@endif

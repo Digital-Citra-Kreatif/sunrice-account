@@ -11,6 +11,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Sunrice\Account\Auth\Users;
 use Sunrice\Account\Settings\AccountSettings;
+use Sunrice\Admin\Panel;
 use Sunrice\Admin\Resources\Forms\ListInput;
 
 /**
@@ -132,7 +133,10 @@ final class EmailSettings
             return new Collection;
         }
 
-        return Users::model()::query()->whereHas('roles', fn ($query) => $query->whereIn('name', $roles))->get();
+        // The panel guard's roles only, and at most 100 people: a staff email never goes to every customer.
+        return Users::model()::query()
+            ->whereHas('roles', fn ($query) => $query->whereIn('name', $roles)->where('guard_name', app(Panel::class)->getGuard()))
+            ->limit(100)->get();
     }
 
     /**

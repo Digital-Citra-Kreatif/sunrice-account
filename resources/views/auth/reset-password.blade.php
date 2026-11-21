@@ -15,11 +15,11 @@
             @csrf
             <input type="hidden" name="token" value="{{ $token }}">
             <label class="account-field"><span>{{ __('account::auth.fields.email') }}</span>
-                <input type="email" name="email" value="{{ old('email', $email) }}" required autocomplete="email">
+                <input type="email" name="email" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'email']) value="{{ old('email', $email) }}" required autocomplete="email">
                 @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'email'])
             </label>
             <label class="account-field"><span>{{ __('account::auth.fields.new_password') }}</span>
-                <input type="password" name="password" required autocomplete="new-password" autofocus>
+                <input type="password" name="password" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'password']) required autocomplete="new-password" autofocus>
                 @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'password'])
             </label>
             <label class="account-field"><span>{{ __('account::auth.fields.password_confirmation') }}</span>

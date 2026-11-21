@@ -10,7 +10,9 @@ return [
         'password' => 'Password',
         'new_password' => 'New password',
         'password_confirmation' => 'Confirm password',
+        'choose' => 'Choose…',
     ],
+    'check_fields' => 'Some details need another look: see the messages by the fields.',
     'login' => [
         'title' => 'Sign in',
         'remember' => 'Keep me signed in',

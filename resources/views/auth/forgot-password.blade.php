@@ -10,7 +10,7 @@
         <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.password.email') }}" class="account-form">
             @csrf <x-honeypot />
             <label class="account-field"><span>{{ __('account::auth.fields.email') }}</span>
-                <input type="email" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
+                <input type="email" name="email" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'email']) value="{{ old('email') }}" required autocomplete="email" autofocus>
                 @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'email'])
             </label>
             {{ $captcha }}
