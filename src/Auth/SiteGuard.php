@@ -6,7 +6,6 @@ namespace Sunrice\Account\Auth;
 
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Support\Facades\Auth;
-use LogicException;
 use Sunrice\Admin\Panel;
 
 /**
@@ -28,12 +27,7 @@ final class SiteGuard
 
     public static function get(): StatefulGuard
     {
-        $guard = Auth::guard(self::name());
-        if (! $guard instanceof StatefulGuard) {
-            throw new LogicException('The account guard "'.self::name().'" must be a session guard.');
-        }
-
-        return $guard;
+        return Auth::guard(self::name());
     }
 
     /**
