@@ -25,3 +25,19 @@
     Indonesian and English.
   - My Account's first page (`account.dashboard`).
   - The CMS's page cache never keeps account pages, and gives signed-in accounts fresh pages.
+- Signing in, registering and resetting a password on the site:
+  - Pages under the account prefix (`/account/login`, `register`, `forgot-password`,
+    `reset-password/{token}`; paths in `sunrice-account.paths`), guests only, in every language;
+    `POST /account/logout` signs out of the site only, keeping an admin session.
+  - Throttled per email + IP and per IP (sign-in 5/30 a minute, registration 5 an hour per IP,
+    reset links 3/10 per 10 minutes), the panel's captcha when it's set up, a honeypot on every
+    form, and the panel's password policy for new passwords. Locked accounts can't sign in, and
+    while the site shares the admin's guard, staff are sent to the admin's sign-in.
+  - Nothing reveals whether an email has an account: a registration with a taken email creates
+    nothing and emails its owner instead (`ExistingAccountNotification`); reset requests always
+    get the same answer.
+  - New accounts get the default roles (`general.default_roles`) and a profile (phone, language,
+    marketing consent). Settings `general.phone` (off/optional/required), `marketing_consent`,
+    `terms_url` and `redirect_after_login`.
+  - Events: `Registering` (change the data, or refuse with a `ValidationException`), `Registered`,
+    `SignedIn`, `SignedOut`, `PasswordReset`. Actions in `Sunrice\Account\Auth\Actions`.

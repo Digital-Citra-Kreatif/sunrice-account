@@ -1,0 +1,63 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'fields' => [
+        'name' => 'Name',
+        'email' => 'Email',
+        'phone' => 'Phone',
+        'password' => 'Password',
+        'new_password' => 'New password',
+        'password_confirmation' => 'Confirm password',
+    ],
+    'login' => [
+        'title' => 'Sign in',
+        'remember' => 'Keep me signed in',
+        'submit' => 'Sign in',
+        'forgot' => 'Forgot your password?',
+        'no_account' => 'No account yet?',
+        'register' => 'Create one',
+        'failed' => 'These details don\'t match an account.',
+        'staff' => 'This account opens the admin: sign in on the admin\'s sign-in page.',
+    ],
+    'logout' => 'Sign out',
+    'register' => [
+        'title' => 'Create an account',
+        'marketing' => 'Send me news and offers by email',
+        'terms' => 'I agree to the :link',
+        'terms_name' => 'terms',
+        'submit' => 'Create account',
+        'have_account' => 'Already have an account?',
+        'login' => 'Sign in',
+        'welcome' => 'Welcome! Your account is ready.',
+        'check_email' => 'Check your email to continue.',
+        'existing' => [
+            'subject' => 'Your account on :site',
+            'intro' => 'Someone tried to create an account with this email address, which already has one.',
+            'action' => 'Sign in',
+            'forgot' => 'Forgot your password? Choose a new one: :url',
+            'ignore' => 'If this wasn\'t you, you can ignore this email: nothing has changed.',
+        ],
+    ],
+    'reset' => [
+        'title' => 'Forgot your password?',
+        'instructions' => 'Enter your email address and we\'ll send you a link to choose a new password.',
+        'send' => 'Send the link',
+        'back' => 'Back to sign in',
+        'sent' => 'If this email has an account, a link to choose a new password is on its way.',
+        'choose' => 'Choose a new password',
+        'submit' => 'Save the password',
+        'done' => 'Your password is changed. Sign in with it.',
+        'invalid' => 'This link is invalid or has expired. Ask for a new one.',
+        'mail' => [
+            'subject' => 'Choose a new password for :site',
+            'intro' => 'You asked to choose a new password for your account.',
+            'action' => 'Choose a new password',
+            'expires' => 'The link works for :minutes minutes.',
+            'ignore' => 'If you didn\'t ask, you can ignore this email: your password stays the same.',
+        ],
+    ],
+    'captcha' => 'Please confirm you\'re not a robot.',
+    'throttled' => 'Too many attempts. Try again in :seconds seconds.',
+];

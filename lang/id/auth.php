@@ -1,0 +1,63 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'fields' => [
+        'name' => 'Nama',
+        'email' => 'Email',
+        'phone' => 'Telepon',
+        'password' => 'Kata sandi',
+        'new_password' => 'Kata sandi baru',
+        'password_confirmation' => 'Ulangi kata sandi',
+    ],
+    'login' => [
+        'title' => 'Masuk',
+        'remember' => 'Biarkan saya tetap masuk',
+        'submit' => 'Masuk',
+        'forgot' => 'Lupa kata sandi?',
+        'no_account' => 'Belum punya akun?',
+        'register' => 'Buat akun',
+        'failed' => 'Data ini tidak cocok dengan akun mana pun.',
+        'staff' => 'Akun ini membuka admin: masuklah lewat halaman masuk admin.',
+    ],
+    'logout' => 'Keluar',
+    'register' => [
+        'title' => 'Buat akun',
+        'marketing' => 'Kirimi saya kabar dan penawaran lewat email',
+        'terms' => 'Saya menyetujui :link',
+        'terms_name' => 'syarat dan ketentuan',
+        'submit' => 'Buat akun',
+        'have_account' => 'Sudah punya akun?',
+        'login' => 'Masuk',
+        'welcome' => 'Selamat datang! Akun Anda sudah siap.',
+        'check_email' => 'Periksa email Anda untuk melanjutkan.',
+        'existing' => [
+            'subject' => 'Akun Anda di :site',
+            'intro' => 'Seseorang mencoba membuat akun dengan alamat email ini, yang sudah memiliki akun.',
+            'action' => 'Masuk',
+            'forgot' => 'Lupa kata sandi? Pilih yang baru: :url',
+            'ignore' => 'Jika ini bukan Anda, abaikan email ini: tidak ada yang berubah.',
+        ],
+    ],
+    'reset' => [
+        'title' => 'Lupa kata sandi?',
+        'instructions' => 'Masukkan alamat email Anda dan kami kirimkan tautan untuk memilih kata sandi baru.',
+        'send' => 'Kirim tautan',
+        'back' => 'Kembali ke halaman masuk',
+        'sent' => 'Jika email ini memiliki akun, tautan untuk memilih kata sandi baru sedang dikirim.',
+        'choose' => 'Pilih kata sandi baru',
+        'submit' => 'Simpan kata sandi',
+        'done' => 'Kata sandi Anda sudah diganti. Masuklah dengannya.',
+        'invalid' => 'Tautan ini tidak valid atau sudah kedaluwarsa. Minta tautan baru.',
+        'mail' => [
+            'subject' => 'Pilih kata sandi baru untuk :site',
+            'intro' => 'Anda meminta untuk memilih kata sandi baru untuk akun Anda.',
+            'action' => 'Pilih kata sandi baru',
+            'expires' => 'Tautan ini berlaku :minutes menit.',
+            'ignore' => 'Jika Anda tidak memintanya, abaikan email ini: kata sandi Anda tetap sama.',
+        ],
+    ],
+    'captcha' => 'Pastikan Anda bukan robot.',
+    'throttled' => 'Terlalu banyak percobaan. Coba lagi dalam :seconds detik.',
+];

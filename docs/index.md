@@ -43,6 +43,10 @@ Plugins built on accounts keep their own sections in the same row, under their o
 | `general.verify_email` | `true` | New accounts confirm their email before signing in |
 | `general.default_roles` | `['member']` | Roles new accounts get |
 | `general.path` | `null` | The account address prefix, over `paths.prefix` |
+| `general.phone` | `'optional'` | The phone number at registration: `off`, `optional` or `required` |
+| `general.marketing_consent` | `true` | Offer the "news and offers" checkbox at registration |
+| `general.terms_url` | `null` | A terms page to agree to at registration |
+| `general.redirect_after_login` | `null` | A site path to go to after signing in (else My Account) |
 
 ## Profiles
 
@@ -119,3 +123,50 @@ The signed-in area's own layout is `account::layout`; your pages extend it and f
 To change an account view, publish the views (`php artisan vendor:publish
 --tag=sunrice-account-views`) and edit your copy in `resources/views/account/`: an app's
 `account.dashboard` is used before the package's `account::dashboard` (`Layout::view()`).
+
+## Signing in and registering
+
+| Page | Route | |
+| --- | --- | --- |
+| `/account/login` | `account.login` | Email and password; "keep me signed in" |
+| `/account/register` | `account.register` | While `general.registration` is on |
+| `/account/forgot-password` | `account.password.request` | Emails a reset link |
+| `/account/reset-password/{token}` | `account.password.reset` | Choose a new password |
+| `POST /account/logout` | `account.logout` | Signs out of the site only |
+
+The paths under the prefix come from `sunrice-account.paths`. These pages are for guests: a
+signed-in account goes to My Account. After signing in, people go back to the page they were
+going to, else `general.redirect_after_login`, else My Account.
+
+What protects them:
+
+- Rate limits per email + IP and per IP: 5 and 30 sign-in attempts a minute, 5 registrations an
+  hour from one address, 3 and 10 reset links per 10 minutes.
+- The panel's captcha (`sunrice-admin.captcha`) when it's set up, and a honeypot on every form.
+- New passwords follow the panel's password policy (Settings → Security).
+- Locked accounts (`AccountGuard::lock()`) can't sign in. While the site shares the admin's guard,
+  accounts that open the admin are sent to the admin's sign-in, which has its own protections.
+- Nothing tells a visitor whether an email has an account: every sign-in refusal reads the same,
+  reset requests always get the same answer, and a registration with an email that has an account
+  creates nothing and emails its owner instead.
+
+New accounts get the default roles (`general.default_roles`) and a profile with their phone,
+language and marketing consent.
+
+### Events
+
+| Event | When |
+| --- | --- |
+| `Registering` | Before an account is created: change `$event->data`, or refuse by throwing a `ValidationException` (its messages show on the form) |
+| `Registered` | An account was created (`$user`, `$profile`, `$data`, `$locale`), after Laravel's `Registered` |
+| `SignedIn` | An account signed in on the site (`$user`, `$method`, `$remember`) |
+| `SignedOut` | An account signed out |
+| `PasswordReset` | An account chose a new password with a reset link |
+
+```php
+Event::listen(Registering::class, function (Registering $event) {
+    if (str_ends_with($event->data['email'], '@example.invalid')) {
+        throw ValidationException::withMessages(['email' => 'Use a real address.']);
+    }
+});
+```
