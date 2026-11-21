@@ -194,3 +194,60 @@ Event::listen(Registering::class, function (Registering $event) {
     }
 });
 ```
+
+## Emails
+
+| Key (`Emails::…`) | To | | Can be off |
+| --- | --- | --- | --- |
+| `account_welcome` (`WELCOME`) | the account | once it's ready: at registration, or when its email is verified | yes |
+| `account_verify` (`VERIFY`) | the account | its verification link | no |
+| `account_password_reset` (`RESET`) | the account | a password reset link | no |
+| `account_existing` (`EXISTING`) | the account | someone tried to register with its email | no |
+| `account_staff_registration` (`STAFF_REGISTRATION`) | staff | someone created an account | yes |
+
+Every email is queued and sent in one language: the account's emails in the language of the page
+it came from, staff emails in the site's main language. They show the site's mail brand
+(`Panel::mailBrand()`: Settings → Branding's logo or name).
+
+Their settings live in the account settings, under `emails.{key}`:
+
+```php
+Account::settings()->saveSection('emails', [
+    'account_welcome' => ['enabled' => true, 'subject' => ['en' => 'Welcome aboard, {name}']],
+    'account_staff_registration' => ['addresses' => 'office@example.com', 'roles' => ['administrator']],
+]);
+```
+
+- `enabled`: the switch (the security emails ignore it).
+- `subject`: per language; `:site` (or `{site}`) and the email's own placeholders (`{name}`…) are
+  replaced. Without one, the default text.
+- Staff emails go to the users with `roles` (default: super admins and administrators) and to
+  `addresses`, each once.
+
+To change an email's body, add `resources/views/account/emails/{key}.blade.php`, a markdown mail
+view (`<x-mail::message>`). It gets `$lang`, `$site` and the email's data (`$name`, `$url`…).
+
+### Your plugin's emails
+
+Register a definition, then build the notification on `AccountEmail`. It gets the switch, the
+subject from the settings and the brand:
+
+```php
+use Sunrice\Account\Emails\AccountEmail;
+use Sunrice\Account\Emails\EmailDefinition;
+
+Account::emails()->register(new EmailDefinition('shop_order_note', 'Order note', 'shop::emails.note'));
+
+final class OrderNote extends AccountEmail
+{
+    public static function key(): string { return 'shop_order_note'; }
+
+    protected function build(MailMessage $mail, mixed $notifiable): MailMessage
+    {
+        return $mail->line($this->text('intro'));   // shop::emails.note.intro, in $this->lang
+    }
+}
+```
+
+`Account::emails()->all()` lists every email, for a plugin that shows them in a settings page of
+its own.

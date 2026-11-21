@@ -53,3 +53,16 @@
     link but not signed in.
   - Middleware `account.verified` for pages that need a verified email; `Verification::verified()`,
     `Verification::url()`; `Verified` event; actions `SendVerificationLink` and `VerifyEmail`.
+- Account emails (`Account::emails()`, `Account::emailSettings()`):
+  - A registry of `EmailDefinition`s (key, label, audience, locked, default texts): the package's
+    welcome, verify email, password reset, account already exists, and to staff, new account.
+    Plugins register theirs.
+  - Settings per email under `emails.{key}`: `enabled` (the verify, reset and existing-account
+    emails can't be switched off), `subject` per language (`:site`, `{name}` placeholders), and for
+    staff emails `addresses` and `roles` (default: super admins and administrators).
+  - `AccountEmail`, the base of every account email: queued, in one language, with the site's mail
+    brand (`Panel::mailBrand()`) in `account::mail.notification`; an app replaces an email's body
+    with `resources/views/account/emails/{key}.blade.php`.
+  - New: the welcome email (at registration while emails aren't verified, else once verified) and
+    the staff email of a new account (to the chosen roles' users and addresses, each once, in the
+    site's main language).
