@@ -23,7 +23,6 @@ php artisan account:install
 | User model | It lacks spatie's `HasRoles` or Laravel's `Notifiable` | |
 | Tables | The users table lacks `name`, `email`, `password`, `email_verified_at` or `remember_token`; the account tables aren't migrated | |
 | Roles of new accounts | One of them has permissions | One of them doesn't exist yet |
-| Sign-in codes | On, and the user model lacks `HasOneTimePasswords` or the `one_time_passwords` table is missing | |
 | Sign in with Google | | On, without credentials |
 | Email | | The mailer is `log` or `array`, or isn't set up: no verification link, password link or code arrives |
 | Guard | | The site shares the admin's guard |
@@ -250,6 +249,20 @@ same languages, and the middleware:
 | `sunrice.account.noindex` | `X-Robots-Tag: noindex`, `Cache-Control: private, no-store`, and the layout's robots tag |
 | `sunrice.account.verified` | After `sunrice.account.auth`: a verified email while verification is required; others are sent a link and the verify page, which says where it went and can send it again |
 
+**Coming back after signing in.** Whichever way someone signs in or registers (password, code,
+Google, the verification link, even opened in another browser), they land where they were going:
+
+- a page behind `sunrice.account.auth`, or one that called `Account::redirectToSignIn()`, is noted;
+- a link made with `Account::signInUrl($returnTo)` or `Account::registerUrl($returnTo)` carries
+  `?return=`; without an argument it comes back to the page it is on. Someone already signed in
+  who follows it goes straight on;
+- only addresses of this site are followed.
+
+```blade
+<a href="{{ Account::signInUrl() }}">Sign in</a>
+<a href="{{ Account::signInUrl('/checkout') }}">Sign in to check out</a>
+```
+
 To send a guest to sign in from a page of your own (a members-only page), return
 `Account::redirectToSignIn()`: once signed in they come back to the page they asked for (or to the
 `$returnTo` you pass: a path like `/checkout` or a URL of this site; anything else is ignored, so a
@@ -316,29 +329,25 @@ language and marketing consent.
 
 ### Sign in with a code or with Google
 
-**Emailed code** (`loginCode`): the sign-in page offers "Email me a sign-in code". It
-uses [spatie/laravel-one-time-passwords](https://github.com/spatie/laravel-one-time-passwords), so
-before turning it on:
+**Emailed code** (`loginCode`, on by default): the sign-in page leads with "Continue with an
+emailed code". One email field is all a visitor fills in:
 
-- add its trait to your user model:
+- an address with an account gets a code, and typing it back signs the account in;
+- a new address gets a code too, while visitors can register, and typing it back **creates the
+  account** and signs it in: verified, with the default roles, named after the part of the address
+  before the @, and without a password until its owner sets one on the profile page
+  (`Auth\Actions\CreateProvenAccount`, which fires `Registering` and `Registered` like the form);
+- with registration off, only accounts get a code. Every address gets the same answer either way.
 
-  ```php
-  use Spatie\OneTimePasswords\Models\Concerns\HasOneTimePasswords;
+The registration form's own fields (phone, terms, your plugin's fields) aren't asked on this
+path, nor by Google: ask for what you need where you need it.
 
-  class User extends Authenticatable
-  {
-      use HasOneTimePasswords, HasRoles, Notifiable;
-  }
-  ```
-
-- publish and run its migration: `php artisan vendor:publish --tag=one-time-passwords-migrations`,
-  then `php artisan migrate`.
-
-The code has 6 digits, works for `codeMinutes` minutes, once, and only in the browser
-that asked for it; 5 tries a minute per account, and 10 per 10 minutes per email and IP. Asking
-again replaces it (at most once a minute). Any email gets the same answer. A code proves the email,
-so it verifies an unverified one. Codes go out as the `account_login_code` account email, not the
-package's own notification, and sign in on the account guard only.
+The code has 6 digits, works for `codeMinutes` minutes, once, and only in the browser session that
+asked for it (the panel's `EmailCodes`, purpose `account-login`); 5 wrong tries end a code, 10 for
+one address lock it for 15 minutes, and there are 10 tries per 10 minutes per email and IP on top.
+Asking again replaces it (at most once a minute, 5 an hour per address). A code proves the email,
+so it verifies an unverified one. Codes go out as the `account_login_code` account email and sign
+in on the account guard only. Nothing is needed from your user model or database.
 
 **Google** (`googleLogin`): set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (or
 `services.google`) and give Google the callback URL `https://your-site/account/login/google/callback`.

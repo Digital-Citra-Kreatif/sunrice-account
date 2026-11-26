@@ -28,7 +28,7 @@ it('starts from the defaults', function () {
         ->and($settings->verifyEmail)->toBeTrue()
         ->and($settings->roles())->toBe(['member'])
         ->and($settings->path)->toBe('')
-        ->and($settings->loginCode)->toBeFalse();
+        ->and($settings->loginCode)->toBeTrue();
 });
 
 it('saves settings over the defaults, keeping the others', function () {

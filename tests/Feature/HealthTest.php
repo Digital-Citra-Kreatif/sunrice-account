@@ -38,7 +38,7 @@ beforeEach(function () {
 
 it('finds a set-up app healthy', function () {
     expect(healthStatuses())->toBe([
-        'user-model' => Check::OK, 'tables' => Check::OK, 'roles' => Check::OK, 'login-codes' => Check::OK,
+        'user-model' => Check::OK, 'tables' => Check::OK, 'roles' => Check::OK,
         'google' => Check::OK, 'mail' => Check::OK, 'guard' => Check::OK,
     ])->and(app(AccountHealth::class)->healthy())->toBeTrue()
         ->and(app(AccountHealth::class)->problems())->toBe([]);
@@ -60,22 +60,16 @@ it('warns when emails go nowhere, a default role is missing or the guard is shar
     $this->artisan('account:check')->assertSuccessful();
 });
 
-it('fails on a default role with permissions, and on sign-in methods that can\'t work', function () {
+it('fails on a default role with permissions, and warns about Google without credentials', function () {
     Role::findOrCreate('vip', 'web')->givePermissionTo(Permission::findOrCreate('shop.orders.view', 'web'));
     accountSettings(['defaultRoles' => ['vip']]);
     expect(healthStatuses()['roles'])->toBe(Check::ERROR)
         ->and(app(AccountHealth::class)->healthy())->toBeFalse();
     $this->artisan('account:check')->assertFailed();
 
-    accountSettings(['defaultRoles' => ['member'], 'loginCode' => true, 'googleLogin' => true]);
+    accountSettings(['defaultRoles' => ['member'], 'googleLogin' => true]);
     config(['services.google' => null, 'sunrice-account.google' => []]);
-    expect(healthStatuses())->toMatchArray(['roles' => Check::OK, 'login-codes' => Check::OK, 'google' => Check::WARNING]);
-
-    Schema::shouldReceive('hasColumn')->andReturnTrue();
-    Schema::shouldReceive('hasTable')->andReturnUsing(fn (string $table): bool => $table !== 'one_time_passwords');
-    expect(healthStatuses()['login-codes'])->toBe(Check::ERROR)
-        ->and(healthMessage('login-codes'))->toContain('one_time_passwords')
-        ->and(healthStatuses()['tables'])->toBe(Check::OK);
+    expect(healthStatuses())->toMatchArray(['roles' => Check::OK, 'google' => Check::WARNING]);
 });
 
 it('fails when the account tables aren\'t migrated', function () {

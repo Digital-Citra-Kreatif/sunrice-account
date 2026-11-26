@@ -17,6 +17,7 @@ use Sunrice\Account\Auth\Throttle;
 use Sunrice\Account\Auth\Users;
 use Sunrice\Account\Auth\Verification;
 use Sunrice\Account\Events\SignedIn;
+use Sunrice\Account\Http\Middleware\Authenticate;
 use Sunrice\Account\Routing\AccountRoutes;
 use Sunrice\Account\View\Layout;
 use Sunrice\Admin\Security\AccountGuard;
@@ -102,6 +103,13 @@ final class VerificationController
         $request->session()->regenerate();
         event(new SignedIn($user, 'verification'));
 
-        return redirect()->to(AccountRoutes::url('sunrice.account.dashboard', [], $locale))->with('account.status', __('account::auth.verify.done'));
+        // On to where they were going when they registered: carried by the link (signed with it),
+        // else noted in this browser's session, else My Account.
+        $return = $request->query('return');
+        $target = is_string($return) && $return !== '' ? Redirects::siteUrl($request, $return) : null;
+        $target ??= $request->session()->has(Authenticate::INTENDED) ? Redirects::afterSignIn($request) : AccountRoutes::url('sunrice.account.dashboard', [], $locale);
+        $request->session()->forget(Authenticate::INTENDED);
+
+        return redirect()->to($target)->with('account.status', __('account::auth.verify.done'));
     }
 }

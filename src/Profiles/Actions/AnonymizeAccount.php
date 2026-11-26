@@ -25,8 +25,8 @@ use Sunrice\Admin\Security\SecurityLog;
  * own decision. The user row stays, since orders, comments and logs point
  * at it, but nothing in it names the person any more: the name and email
  * become placeholders, the password a random one, and the phone, language,
- * marketing consent, plugins' profile fields, roles, Google links, sign-in
- * codes, reset links and sessions go. It can't be undone.
+ * marketing consent, plugins' profile fields, roles, Google links, reset
+ * links and sessions go. It can't be undone.
  *
  * Plugins clear their own records in a listener of `Anonymized`.
  */
@@ -74,9 +74,6 @@ final class AnonymizeAccount
             ])->save();
             if (method_exists($user, 'syncRoles')) {
                 $user->syncRoles([]);
-            }
-            if (method_exists($user, 'oneTimePasswords')) {
-                $user->oneTimePasswords()->delete();
             }
             DB::table(SignInWithGoogle::TABLE)->where('user_id', $user->getKey())->delete();
 

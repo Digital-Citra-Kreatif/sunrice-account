@@ -1,6 +1,21 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (2026-11-26)
+
+- **One field to sign in or sign up.** "Continue with an emailed code" is now the sign-in page's
+  first button and on by default (`loginCode`). A new address gets a code too, while visitors can
+  register, and typing it back creates the account and signs it in: verified, with the default
+  roles, no password until its owner sets one (`Auth\Actions\CreateProvenAccount`, also used for
+  Google). With registration off, only accounts get a code.
+- **Codes use the panel's `EmailCodes`** (purpose `account-login`), kept in the session that asked:
+  `spatie/laravel-one-time-passwords`, its trait on the user model and its table are no longer
+  needed (remove them). `LoginCodes::send()` and `consume()` take an address, not a user. Needs
+  Sunrice 0.8.1.
+- **Back to where they were.** `?return=` on the sign-in and registration pages (a path or a URL
+  of this site) is where signing in leads, whichever way; `Account::signInUrl()` and
+  `Account::registerUrl()` make such links, by default back to the page they are on. Someone
+  already signed in who follows one goes straight on. The verification link carries the address
+  too, so it works when opened in another browser, and no longer always ends on My Account.
 
 - **Administration → Accounts** (`Admin\AccountResource`): the site's accounts in the admin, behind
   `account.accounts.view`, `.update`, `.delete` and `.export`. Staff change a name, address, phone

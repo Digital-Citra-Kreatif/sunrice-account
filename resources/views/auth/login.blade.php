@@ -1,5 +1,5 @@
 {{--
-    Sign in: with a password; with an emailed code ($codes, a second button sending the same email)
+    Sign in: with a password; with an emailed code ($codes: the first button, sending the same email, and the way in for a new address while $registration)
     and Google ($google) while they're on. $captcha (the widget, empty when off), $registration,
     $verifyEmail, $adminLogin (the admin's sign-in, while the site shares its guard; else null).
 --}}
@@ -20,26 +20,27 @@
                     <a class="account-auth__link" href="{{ $adminLogin }}">{{ __('account::auth.login.admin') }}</a>
                 @endif
             </label>
+            @if ($codes)
+                {{-- The one-field way in, first: the same email, without a password. It makes a new address's account too. --}}
+                @if ($registration)
+                    <p class="account-auth__hint">{{ __('account::auth.login.code_hint') }}</p>
+                @endif
+                <button type="submit" class="account-button account-button--primary" formaction="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.code.send') }}" formnovalidate>{{ __('account::auth.login.with_code') }}</button>
+                <p class="account-auth__or">{{ __('account::auth.login.or') }}</p>
+            @endif
             <label class="account-field"><span>{{ __('account::auth.fields.password') }}</span>
                 <input type="password" name="password" required autocomplete="current-password">
             </label>
             <label class="account-check"><input type="checkbox" name="remember" value="1" @checked(old('remember'))> {{ __('account::auth.login.remember') }}</label>
             {{ $captcha }}
-            <button type="submit" class="account-button account-button--primary">{{ __('account::auth.login.submit') }}</button>
-            @if ($codes)
-                <p class="account-auth__or">{{ __('account::auth.login.or') }}</p>
-                {{-- The same email, without the password. --}}
-                <button type="submit" class="account-button" formaction="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.code.send') }}" formnovalidate>{{ __('account::auth.login.with_code') }}</button>
-            @endif
+            <button type="submit" class="account-button {{ $codes ? '' : 'account-button--primary' }}">{{ __('account::auth.login.submit') }}</button>
             <a class="account-auth__link" href="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.password.request') }}">{{ __('account::auth.login.forgot') }}</a>
             @if ($verifyEmail)
                 <a class="account-auth__link" href="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.verification.notice') }}">{{ __('account::auth.login.no_link') }}</a>
             @endif
         </form>
         @if ($google)
-            @unless ($codes)
-                <p class="account-auth__or">{{ __('account::auth.login.or') }}</p>
-            @endunless
+            <p class="account-auth__or">{{ __('account::auth.login.or') }}</p>
             <a class="account-button account-button--google" href="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.google') }}">{{ __('account::auth.login.with_google') }}</a>
         @endif
         @if ($registration)

@@ -123,6 +123,37 @@ final class Account
         return redirect(AccountRoutes::url('sunrice.account.login'));
     }
 
+    /**
+     * The sign-in page's address, for a link: once signed in (with a
+     * password, a code, Google) the visitor comes back to `$returnTo`, a
+     * path like `/checkout` or a URL of this site; by default the page the
+     * link is on. Someone already signed in who follows it goes straight there.
+     */
+    public function signInUrl(?string $returnTo = null): string
+    {
+        return $this->withReturn(AccountRoutes::url('sunrice.account.login'), $returnTo);
+    }
+
+    /** The registration page's address, coming back like signInUrl(). */
+    public function registerUrl(?string $returnTo = null): string
+    {
+        return $this->withReturn(AccountRoutes::url('sunrice.account.register'), $returnTo);
+    }
+
+    private function withReturn(string $url, ?string $returnTo): string
+    {
+        $request = request();
+        $target = Redirects::siteUrl($request, $returnTo ?? $request->fullUrl());
+        // Not back to an account page for guests: signing in would bounce off it.
+        if ($target === null || str_starts_with($target, AccountRoutes::url('sunrice.account.login')) || str_starts_with($target, AccountRoutes::url('sunrice.account.register'))) {
+            return $url;
+        }
+        $path = (string) parse_url($target, PHP_URL_PATH);
+        $query = parse_url($target, PHP_URL_QUERY);
+
+        return $url.'?'.http_build_query(['return' => ($path === '' ? '/' : $path).(is_string($query) && $query !== '' ? '?'.$query : '')]);
+    }
+
     /** The profile of a user (created on first need). */
     public function profile(Authenticatable $user): Profile
     {

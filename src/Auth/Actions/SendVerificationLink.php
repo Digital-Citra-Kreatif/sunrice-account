@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Sunrice\Account\Auth\Verification;
+use Sunrice\Account\Http\Controllers\Auth\Redirects;
 use Sunrice\Account\Notifications\VerifyEmailNotification;
 
 /** Emails an unverified account its verification link: at most once a minute per account. */
@@ -25,7 +26,7 @@ final class SendVerificationLink
             return false;
         }
         RateLimiter::hit($key, 60);
-        Notification::send($user, new VerifyEmailNotification($locale));
+        Notification::send($user, new VerifyEmailNotification($locale, Redirects::intended(request())));
 
         return true;
     }

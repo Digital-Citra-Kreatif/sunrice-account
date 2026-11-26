@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Sunrice\Account\Facades\Account;
 use Sunrice\Account\Notifications\LoginCodeNotification;
 use Sunrice\Account\Notifications\VerifyEmailNotification;
+use Workbench\App\Models\User;
 
 it('asks a signed-in account to verify, says where the link went, and sends it again', function () {
     Notification::fake();
@@ -80,4 +81,54 @@ it('reports a reset link that no longer works above the form, with a way to a ne
     $this->from('/account/reset-password/bad')->post('/account/reset-password', ['token' => 'bad', 'email' => 'ana@example.com', 'password' => 'Correct-Horse-Battery-9', 'password_confirmation' => 'Correct-Horse-Battery-9'])
         ->assertSessionHasErrors('token');
     $this->get('/account/reset-password/bad')->assertSee('Minta tautan baru')->assertSee('http://localhost/account/forgot-password');
+});
+
+it('comes back to the page a sign-in link was on', function () {
+    siteUser();
+
+    $this->get('/account/login?return=/blog/first-post?page=2')->assertOk();
+    $this->post('/account/login', ['email' => 'ana@example.com', 'password' => 'secret-pass'])->assertRedirect('/blog/first-post?page=2');
+
+    // Already signed in: straight on, without the sign-in page.
+    $this->get('/account/login?return=/blog/second-post')->assertRedirect('/blog/second-post');
+    $this->get('/account/register?return=/blog/second-post')->assertRedirect('/blog/second-post');
+});
+
+it('makes sign-in links that come back', function () {
+    $this->get('/account/login'); // a request to build on
+    expect(Account::signInUrl('/checkout'))->toEndWith('/account/login?return=%2Fcheckout')
+        ->and(Account::registerUrl('/blog/a?page=2'))->toEndWith('/account/register?return=%2Fblog%2Fa%3Fpage%3D2')
+        ->and(Account::signInUrl('https://evil.example/x'))->toEndWith('/account/login')
+        // From the sign-in page itself: nowhere to come back to.
+        ->and(Account::signInUrl())->toEndWith('/account/login');
+});
+
+it('never follows a return address to another site', function () {
+    siteUser();
+
+    foreach (['https://evil.example/steal', '//evil.example', '/\\evil.example', 'javascript:alert(1)'] as $return) {
+        $this->get('/account/login?return='.urlencode($return))->assertOk();
+        $this->post('/account/login', ['email' => 'ana@example.com', 'password' => 'secret-pass'])->assertRedirect('/account');
+        $this->get('/account/login?return='.urlencode($return))->assertRedirect('/account');
+        $this->post('/account/logout');
+    }
+});
+
+it('carries where a new account was going in its verification link, for another browser', function () {
+    Notification::fake();
+    $this->get('/account/register?return=/checkout')->assertOk();
+    $this->post('/account/register', ['name' => 'Budi', 'email' => 'budi@example.com', 'password' => 'Correct-Horse-Battery-9', 'password_confirmation' => 'Correct-Horse-Battery-9']);
+    $user = User::query()->where('email', 'budi@example.com')->sole();
+    $link = '';
+    Notification::assertSentTo($user, VerifyEmailNotification::class, function (VerifyEmailNotification $n) use ($user, &$link) {
+        $link = $n->toMail($user)->actionUrl;
+
+        return true;
+    });
+    expect($link)->toContain('return=');
+
+    // Opened elsewhere: no session knows about the checkout, the link does.
+    $this->flushSession();
+    $this->get($link)->assertRedirect('/checkout');
+    $this->assertAuthenticatedAs($user, 'account');
 });
