@@ -132,3 +132,29 @@ it('carries where a new account was going in its verification link, for another 
     $this->get($link)->assertRedirect('/checkout');
     $this->assertAuthenticatedAs($user, 'account');
 });
+
+it('signs in with the password on Enter, and asks for a code when none is typed', function () {
+    Notification::fake();
+    siteUser();
+
+    // The form's first submit button is the one Enter presses: it posts to the password sign-in.
+    $html = $this->get('/account/login')->assertOk()->getContent();
+    expect(strpos($html, 'formnovalidate tabindex="-1"'))->toBeLessThan(strpos($html, 'account/login/code'));
+
+    // Only the email typed: on to the code.
+    $this->post('/account/login', ['email' => 'ana@example.com'])->assertRedirect('/account/login/code');
+    Notification::assertSentTimes(LoginCodeNotification::class, 1);
+    $this->assertGuest('account');
+
+    // With the password: signed in, no code.
+    $this->post('/account/login', ['email' => 'ana@example.com', 'password' => 'secret-pass'])->assertRedirect('/account');
+    $this->assertAuthenticated('account');
+    Notification::assertSentTimes(LoginCodeNotification::class, 1);
+});
+
+it('still asks for the password when codes are off', function () {
+    accountSettings(['loginCode' => false]);
+    siteUser();
+
+    $this->post('/account/login', ['email' => 'ana@example.com'])->assertSessionHasErrors('password');
+});

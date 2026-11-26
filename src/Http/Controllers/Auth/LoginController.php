@@ -39,6 +39,10 @@ final class LoginController
 
     public function store(Request $request, AuthenticateAccount $authenticate): RedirectResponse
     {
+        // Enter with only the email typed: that is asking for a code, while codes are on.
+        if (! $request->filled('password') && app(LoginCodes::class)->available()) {
+            return app(LoginCodeController::class)->send($request, app(LoginCodes::class));
+        }
         $request->validate([
             'email' => ['required', 'string', 'email', 'max:190'],
             'password' => ['required', 'string', 'max:255'],

@@ -74,7 +74,7 @@ Account::settings()->fill(['verifyEmail' => false])->save();
 | `termsUrl` | `''` | A terms page to agree to at registration (a site path or a full URL) |
 | `redirectAfterLogin` | `''` | A site path to go to after signing in (else My Account) |
 | `deletionRequests` | `true` | Accounts can ask to be deleted from their profile page |
-| `loginCode` | `false` | Offer sign-in with an emailed code |
+| `loginCode` | `true` | Offer sign-in with an emailed code, which also creates the account of a new address while visitors can register |
 | `codeMinutes` | `10` | How long a sign-in code works (1–60 minutes) |
 | `googleLogin` | `false` | Offer sign-in with Google (refused until the credentials are set) |
 | `announcement`, `announcementPosition` | off, `above` | An announcement in My Account: `tab`, `above` or `below` |

@@ -57,3 +57,10 @@ it('pushes its styles to a theme\'s layout, unless the theme styles the pages it
         (new Filesystem)->deleteDirectory($dir);
     }
 });
+
+it('sets the account colours for any layout, so a theme\'s pages are styled too', function () {
+    $css = view('account::partials.styles')->render();
+
+    expect($css)->toContain(':where(:root) { --account-fg:')->toContain('--account-accent:')
+        ->and($css)->not->toContain('.account-site { color-scheme: light dark; --account-fg');
+});
