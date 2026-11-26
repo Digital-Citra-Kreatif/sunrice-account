@@ -22,6 +22,7 @@ use LogicException;
  * @property Carbon|null $marketing_consent_at
  * @property bool $password_set false for accounts made without a password (emailed code, Google) until they set one
  * @property Carbon|null $deletion_requested_at
+ * @property Carbon|null $anonymized_at when staff removed the account's personal data
  * @property array<string, mixed>|null $meta
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -48,6 +49,7 @@ class Profile extends Model
             'marketing_consent_at' => 'datetime',
             'password_set' => 'boolean',
             'deletion_requested_at' => 'datetime',
+            'anonymized_at' => 'datetime',
             'meta' => 'array',
         ];
     }
