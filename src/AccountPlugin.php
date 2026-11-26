@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Sunrice\Account;
 
 use Sunrice\Account\Admin\AccountResource;
+use Sunrice\Account\Health\AccountHealth;
 use Sunrice\Account\Permissions\AccountPermissions;
 use Sunrice\Account\Settings\AccountSettings;
 use Sunrice\Admin\BasePlugin;
+use Sunrice\Admin\Console\InstallOutput;
 use Sunrice\Admin\Panel;
 use Sunrice\Admin\Permissions\Permission;
 use Sunrice\Cms\CmsPlugin;
@@ -51,6 +53,12 @@ final class AccountPlugin extends BasePlugin
         $panel->resources(AccountResource::class);
         // Created by `sunrice:roles`, without any permission: members never open the admin.
         $panel->defaultRole(self::MEMBER_ROLE, []);
+        // `sunrice:install` ends with what accounts still need from the app (AccountHealth).
+        $panel->installStep('account.checks', function (InstallOutput $output): void {
+            foreach (app(AccountHealth::class)->problems() as $check) {
+                $output->warn("Accounts, {$check->label}: {$check->message}");
+            }
+        });
         $panel->docs('Accounts', dirname(__DIR__).'/docs');
     }
 }

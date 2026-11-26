@@ -3,6 +3,35 @@
 `sunrice/account` gives the site accounts of its own, kept apart from the admin: people register
 and sign in on the site, and a site sign-in never opens the admin.
 
+## Installing and checking
+
+```bash
+composer require sunrice/account
+php artisan sunrice:install --plugins   # adds AccountPlugin to your panel provider
+php artisan account:install
+```
+
+| Command | |
+| --- | --- |
+| `account:install` | Runs the migrations (and with them the permissions), creates the default roles (`member`), then checks what accounts need. Safe to run again |
+| `account:check` | Only checks. Exit code 1 when something is broken, so a deploy script can stop on it; warnings don't fail it |
+
+`sunrice:install` ends with the same checks' warnings (the `account.checks` install step).
+
+| Check | Broken (fails) | Worth a look (warns) |
+| --- | --- | --- |
+| User model | It lacks spatie's `HasRoles` or Laravel's `Notifiable` | |
+| Tables | The users table lacks `name`, `email`, `password`, `email_verified_at` or `remember_token`; the account tables aren't migrated | |
+| Roles of new accounts | One of them has permissions | One of them doesn't exist yet |
+| Sign-in codes | On, and the user model lacks `HasOneTimePasswords` or the `one_time_passwords` table is missing | |
+| Sign in with Google | | On, without credentials |
+| Email | | The mailer is `log` or `array`, or isn't set up: no verification link, password link or code arrives |
+| Guard | | The site shares the admin's guard |
+
+The checks only look: nothing is changed or sent. In code, `Sunrice\Account\Health\AccountHealth`
+gives them (`checks()`, `problems()`, `healthy()`), each a `Check` with a `key`, `label`, `status`
+(`ok`, `warning`, `error`) and `message`: for a status page of your own.
+
 ## The guard
 
 Accounts sign in on the `account` session guard (`sunrice-account.auth.guard`). Unless
