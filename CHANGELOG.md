@@ -16,6 +16,11 @@
   for queries), and `Admin\AccountUserResource` is Administration → Users with staff only: set it
   with `$panel->userResource(AccountUserResource::class)`.
 - `Account::adminCard()`: a plugin's cards beside an account's form in the admin.
+- **`php artisan account:install`** runs the migrations, creates the default roles and checks what
+  accounts need; **`php artisan account:check`** only checks, and fails when something is broken
+  (the user model's traits, the tables, the roles new accounts get, what sign-in codes and Google
+  rely on, mail, the guard). `sunrice:install` ends with the same warnings. In code:
+  `Health\AccountHealth` and `Health\Check`.
 
 ## 0.1.0 (2026-11-21)
 

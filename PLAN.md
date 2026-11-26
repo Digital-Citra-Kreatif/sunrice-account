@@ -69,7 +69,8 @@ sunrice-commerce's customer accounts. Commerce today has all of this built in
 9. **Admin accounts** ✅: default roles on registration, `AccountUserResource`, Administration →
    Accounts with its actions and `account.accounts.*` permissions; `AnonymizeAccount` and the
    `Anonymized` event; `Account::adminCard()`.
-10. **Finish**: `account:install`, a health check, docs, CHANGELOG, tag 0.1.0.
+10. **Finish** ✅: `account:install`, a health check (`account:check`, `AccountHealth`), docs,
+    CHANGELOG. Released from 0.2.0.
 
 ## Phase 2: sunrice-commerce on top of it
 

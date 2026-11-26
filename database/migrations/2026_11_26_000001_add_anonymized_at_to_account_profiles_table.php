@@ -19,6 +19,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('account_profiles', function (Blueprint $table) {
+            $table->dropIndex(['anonymized_at']);
             $table->dropColumn('anonymized_at');
         });
     }

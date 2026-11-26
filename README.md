@@ -7,14 +7,13 @@ Sunrice Commerce builds its customer accounts on it.
 
 Requirements: PHP 8.4+, Laravel 13, Sunrice 0.8 (`sunrice/admin` and `sunrice/cms`).
 
-> Work in progress: see [PLAN.md](PLAN.md) for what's built and what's next.
+> Phase 1 of [PLAN.md](PLAN.md) (this package) is built. Phase 2 moves Sunrice Commerce onto it.
 
 ## Installation
 
 ```bash
 composer require sunrice/account
-php artisan migrate
-php artisan sunrice:roles
+php artisan account:install
 ```
 
 Add the plugin after the CMS in your panel provider:
@@ -25,5 +24,6 @@ $panel->userResource(AccountUserResource::class) // Users lists staff only; acco
 ```
 
 Your user model needs spatie/laravel-permission's `HasRoles` (as Sunrice's does) and `Notifiable`.
+`php artisan account:check` says whether the app has everything accounts need.
 
 Developer docs: [docs/](docs/index.md), also shown in the admin under Help → Developer docs.

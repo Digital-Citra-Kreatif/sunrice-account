@@ -39,7 +39,8 @@ final class AccountServiceProvider extends PackageServiceProvider
             ->name('sunrice-account')
             ->hasConfigFile()
             ->discoversMigrations()
-            ->runsMigrations();
+            ->runsMigrations()
+            ->hasCommands([Console\CheckCommand::class, Console\InstallCommand::class]);
     }
 
     public function packageRegistered(): void
