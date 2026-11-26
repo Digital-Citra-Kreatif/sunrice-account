@@ -101,9 +101,89 @@ $profile->metaValue('shop.tax_id');
 | --- | --- |
 | `member` role | Given to new accounts. No admin permissions. Created by `php artisan sunrice:roles` |
 | `account.settings.accounts` | Edit Settings → Accounts (a privileged permission) |
+| `account.accounts.view`, `.update` | Open Administration → Accounts; change an account, email a password link, mark an address verified, end sessions, dismiss a deletion request |
+| `account.accounts.delete`, `.export` | Remove an account's personal data; export the list as CSV (privileged permissions) |
 
 `Account::roles($user)` gives the names of an account's roles (on the panel's guard), sorted: what a
 plugin checks to let only some accounts in.
+
+## Accounts in the admin
+
+**Administration → Accounts** lists the site's accounts: every user who doesn't open the admin. The
+users table is shared with staff, and `Sunrice\Account\Admin\Accounts` tells them apart. Staff
+have a role that opens the admin (the super admin's, or one with `sunrice.access`) or that
+permission itself; everyone else is an account.
+
+```php
+use Sunrice\Account\Admin\Accounts;
+
+Accounts::isStaff($user);              // opens the admin
+Accounts::accounts(User::query());     // site accounts, without those whose personal data was removed
+Accounts::staff(User::query());
+```
+
+| On the screen | |
+| --- | --- |
+| The list | Name, email, roles, whether the address is verified, whether the account asked to be deleted; search, filters for each, CSV export |
+| Editing | Name, email (in lower case; it isn't sent for verification again), phone and roles. Only roles that don't open the admin are offered, and only those the staff member may give out |
+| Email a password link | The reset email, in the account's language |
+| Mark email as verified | For an address staff know is theirs. The welcome email goes out as it does after the link |
+| Sign out everywhere | Ends the account's sessions |
+| Dismiss the deletion request | The data stays; the account can ask again |
+| Remove personal data… | See below. One account or the selected ones |
+
+There is no "New account": accounts are made on the site. Staff are never reachable here.
+
+**Users with staff only.** A plugin can't change the panel's Users screen, so your panel provider
+chooses the one this package ships. Without it, Users lists site accounts too:
+
+```php
+use Sunrice\Account\Admin\AccountUserResource;
+
+$panel->userResource(AccountUserResource::class)->plugin(CmsPlugin::make())->plugin(AccountPlugin::make());
+```
+
+It lists staff, and users without a role who never registered on the site (someone just created
+there, until their roles are chosen). Extend it to change its form or list.
+
+### Removing an account's personal data
+
+Nothing in the admin deletes a user row: orders, comments and logs point at it. **Remove personal
+data…** (`Profiles\Actions\AnonymizeAccount`, needs `account.accounts.delete`) leaves the row and
+takes the person out of it, for good:
+
+- the name becomes "Deleted account" and the email `deleted-{id}-{random}@invalid.local`;
+- the password becomes a random one, and the address is unverified;
+- phone, language, marketing consent and plugins' profile fields (`meta`) are cleared;
+- roles, Google links, sign-in codes and password reset links are deleted, and sessions end;
+- the account leaves Administration → Accounts (`account_profiles.anonymized_at`).
+
+Staff are refused (they are managed in Users). Your plugin clears what it keeps about the person
+in a listener of `Sunrice\Account\Events\Anonymized` (`$user`, `$profile`, and `$email`: the
+address the account had, to find records kept by email). It is dispatched inside the transaction,
+so a listener that throws undoes the removal.
+
+```php
+Event::listen(Anonymized::class, function (Anonymized $event) {
+    Order::query()->where('user_id', $event->user->getAuthIdentifier())->orWhere('email', $event->email)
+        ->update(['customer_name' => 'Deleted account', 'email' => null, 'shipping_address' => null]);
+});
+```
+
+### Your plugin's cards beside an account
+
+`Account::adminCard()` adds the panel's cards beside an account's form: what your plugin knows
+about it. The closure gets the account and the staff member looking (check their permissions), and
+gives a card, several or null. It runs once per page, so load what it shows there.
+
+```php
+use Sunrice\Admin\Support\Card;
+
+Account::adminCard(fn (Model $account, Authorizable $viewer) => $viewer->can('shop.orders.view')
+    ? Card::make('Orders')->rows(['Orders' => Order::query()->where('user_id', $account->getKey())->count()])
+        ->link('All orders', route('shop.orders.index', ['customer' => $account->getKey()]))
+    : null);
+```
 
 ## Pages and routes
 

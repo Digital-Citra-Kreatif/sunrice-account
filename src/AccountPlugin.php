@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sunrice\Account;
 
+use Sunrice\Account\Admin\AccountResource;
 use Sunrice\Account\Permissions\AccountPermissions;
 use Sunrice\Account\Settings\AccountSettings;
 use Sunrice\Admin\BasePlugin;
@@ -45,7 +46,9 @@ final class AccountPlugin extends BasePlugin
         }
         // Settings → Accounts, behind account.settings.accounts (hidden while a plugin shows it: Account::settingsShownBy()).
         $panel->settings(AccountSettings::class);
-        $panel->privilegedPermissions('account.settings.*');
+        $panel->privilegedPermissions('account.settings.*', 'account.accounts.delete', 'account.accounts.export');
+        // Administration → Accounts, behind account.accounts.view, .update, .delete and .export.
+        $panel->resources(AccountResource::class);
         // Created by `sunrice:roles`, without any permission: members never open the admin.
         $panel->defaultRole(self::MEMBER_ROLE, []);
         $panel->docs('Accounts', dirname(__DIR__).'/docs');

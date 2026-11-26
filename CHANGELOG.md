@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+- **Administration → Accounts** (`Admin\AccountResource`): the site's accounts in the admin, behind
+  `account.accounts.view`, `.update`, `.delete` and `.export`. Staff change a name, address, phone
+  and site roles, email a password link, mark an address verified, end sessions, see and dismiss
+  deletion requests, and export the list. There is no "New account", and staff are never listed.
+- **Remove personal data** (`Profiles\Actions\AnonymizeAccount`, the screen's Delete): the user row
+  stays for what points at it, without the person. Name and email become placeholders, the
+  password a random one; phone, language, consent, plugins' profile fields, roles, Google links,
+  sign-in codes, reset links and sessions go. Plugins clear their own records on the new
+  `Anonymized` event. Migration `add_anonymized_at_to_account_profiles_table`: run
+  `php artisan migrate`.
+- `Admin\Accounts` tells staff from accounts (`isStaff()`, and `staff()`, `accounts()`, `users()`
+  for queries), and `Admin\AccountUserResource` is Administration → Users with staff only: set it
+  with `$panel->userResource(AccountUserResource::class)`.
+- `Account::adminCard()`: a plugin's cards beside an account's form in the admin.
+
 ## 0.1.0 (2026-11-21)
 
 - **Accessibility**: a field's error is tied to its input (`aria-invalid`, `aria-describedby`;

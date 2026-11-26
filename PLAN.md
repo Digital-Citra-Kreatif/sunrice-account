@@ -42,9 +42,10 @@ sunrice-commerce's customer accounts. Commerce today has all of this built in
 - `Account::registrationFields(...)`, `Account::profileFields(...)`: extra fields with their rules.
 - `Account::settingsShownBy($plugin)`, with `AccountSettings::form()` and `::sections()` for its page.
 - `Account::emails()->register(...)`: more account emails.
+- `Account::adminCard(fn ($account, $viewer) => ...)`: cards beside an account in Administration → Accounts.
 - Events. Before (change the data, or refuse it with a `ValidationException`): `Registering`,
   `ProfileUpdating`. After: `Registered`, `Verified`, `SignedIn`, `SignedOut`, `ProfileUpdated`,
-  `PasswordChanged`, `DeletionRequested`.
+  `PasswordChanged`, `DeletionRequested`, `Anonymized`.
 
 ## Phase 1: this package (one pull request each)
 
@@ -65,8 +66,9 @@ sunrice-commerce's customer accounts. Commerce today has all of this built in
    consent), password, deletion request, announcement; registration and profile fields; events.
 8. **Settings page** ✅: Settings → Accounts, a panel settings section (`AccountSettings`: general,
    sign-in, announcement, emails), with cross-checks, and the take-over API.
-9. **Admin accounts**: default roles on registration, `AccountUserResource`, Administration →
-   Accounts with its actions and `account.accounts.*` permissions.
+9. **Admin accounts** ✅: default roles on registration, `AccountUserResource`, Administration →
+   Accounts with its actions and `account.accounts.*` permissions; `AnonymizeAccount` and the
+   `Anonymized` event; `Account::adminCard()`.
 10. **Finish**: `account:install`, a health check, docs, CHANGELOG, tag 0.1.0.
 
 ## Phase 2: sunrice-commerce on top of it

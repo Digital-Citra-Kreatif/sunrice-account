@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sunrice\Account;
 
 use Closure;
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
@@ -22,6 +23,7 @@ use Sunrice\Account\Profiles\Models\Profile;
 use Sunrice\Account\Routing\AccountRoutes;
 use Sunrice\Account\Settings\AccountSettings;
 use Sunrice\Admin\Panel;
+use Sunrice\Admin\Support\Card;
 
 /**
  * The account package's public API (also the `Account` facade). Plugins
@@ -32,6 +34,9 @@ use Sunrice\Admin\Panel;
 final class Account
 {
     private ?string $settingsOwner = null;
+
+    /** @var list<Closure(Model, Authorizable): (Card|list<Card>|null)> */
+    private array $adminCards = [];
 
     /** The settings (Settings → Accounts), as saved (each property's default until then). */
     public function settings(): AccountSettings
@@ -209,6 +214,37 @@ final class Account
     public function profileFields(Closure $fields): void
     {
         app(Fields::class)->addToProfile($fields);
+    }
+
+    /**
+     * A card beside an account's form in Administration → Accounts (the
+     * panel's `Card`: rows, a list, links): what your plugin knows about
+     * the account. The closure gets the account and the staff member
+     * looking, and gives a card, several or null; it runs once per page.
+     *
+     * @param  Closure(Model, Authorizable): (Card|list<Card>|null)  $card
+     */
+    public function adminCard(Closure $card): void
+    {
+        $this->adminCards[] = $card;
+    }
+
+    /**
+     * The cards plugins add to an account's page in the admin.
+     *
+     * @return list<Card>
+     */
+    public function adminCards(Model $account, Authorizable $viewer): array
+    {
+        $cards = [];
+        foreach ($this->adminCards as $make) {
+            $made = $make($account, $viewer);
+            foreach ($made instanceof Card ? [$made] : ($made ?? []) as $card) {
+                $cards[] = $card;
+            }
+        }
+
+        return $cards;
     }
 
     /** A table or column name of spatie/laravel-permission's config. */

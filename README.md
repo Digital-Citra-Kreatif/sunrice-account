@@ -20,7 +20,8 @@ php artisan sunrice:roles
 Add the plugin after the CMS in your panel provider:
 
 ```php
-$panel->plugin(CmsPlugin::make())->plugin(AccountPlugin::make());
+$panel->userResource(AccountUserResource::class) // Users lists staff only; accounts are in Administration → Accounts
+    ->plugin(CmsPlugin::make())->plugin(AccountPlugin::make());
 ```
 
 Your user model needs spatie/laravel-permission's `HasRoles` (as Sunrice's does) and `Notifiable`.
