@@ -4,67 +4,83 @@ declare(strict_types=1);
 
 namespace Sunrice\Account\Auth;
 
-use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
-use Spatie\OneTimePasswords\Actions\ConsumeOneTimePasswordAction;
-use Spatie\OneTimePasswords\Actions\CreateOneTimePasswordAction;
-use Spatie\OneTimePasswords\Enums\ConsumeOneTimePasswordResult;
 use Sunrice\Account\Notifications\LoginCodeNotification;
 use Sunrice\Account\Settings\AccountSettings;
+use Sunrice\Admin\Auth\EmailCodes;
 
 /**
- * Emailed sign-in codes (Settings → Accounts → Sign-in), with
- * spatie/laravel-one-time-passwords: the user model uses its
- * `HasOneTimePasswords` trait, and its `one_time_passwords` table exists.
- * A code is 6 digits, valid for `codeMinutes`, usable once, from
- * the browser that asked (same IP and user agent); a new code replaces
- * the previous one; 5 tries a minute per account (and the controller's own
- * throttle on top).
+ * Emailed sign-in codes (Settings → Accounts → Sign-in), with the panel's
+ * EmailCodes: a code is 6 digits, for one address, valid for
+ * `codeMinutes`, usable once, in the browser session that asked for it; a
+ * new code replaces the previous one; 5 wrong tries end a code, and 10 for
+ * one address lock it for 15 minutes whatever codes it asks for.
  *
- * The package's actions are used directly, never its
- * attemptLoginUsingOneTimePassword(): that signs in on the default guard,
- * the admin's. Its own notification isn't used either: the code goes out
- * as an account email.
+ * A code is for an address, not an account: the right code proves the
+ * address, and the controller then signs in its account or, for a new
+ * address while registration is open, creates it.
  *
  * @api
  */
 final class LoginCodes
 {
-    public function __construct(
-        private AccountSettings $settings,
-        private CreateOneTimePasswordAction $create,
-        private ConsumeOneTimePasswordAction $consume,
-    ) {}
+    /** The purpose of these codes among the panel's EmailCodes. */
+    public const PURPOSE = 'account-login';
+
+    public function __construct(private AccountSettings $settings, private EmailCodes $codes) {}
 
     public function available(): bool
     {
         return $this->settings->loginCode;
     }
 
-    /** Creates a code for the user (replacing an earlier one) and emails it. */
-    public function send(Authenticatable $user, Request $request, string $locale): void
+    /**
+     * Starts a code for the address in this session (replacing an earlier
+     * one) and emails it there.
+     *
+     * @param  array<string, mixed>  $data  kept with it, given back by pending()
+     */
+    public function send(string $email, Request $request, string $locale, array $data = []): void
     {
+        $email = Users::normalizeEmail($email);
         $minutes = $this->minutes();
-        $code = $this->create->execute($user, $minutes, $request)->getAttribute('password');
-        Notification::send($user, new LoginCodeNotification(is_string($code) ? $code : '', $minutes, $locale));
+        $code = $this->codes->issue($request, self::PURPOSE, $email, $data, $minutes);
+        $notification = new LoginCodeNotification($code, $minutes, $locale);
+        // To the account when there is one (its own notification channels), else to the address.
+        $user = Users::findByEmail($email);
+        $user !== null ? Notification::send($user, $notification) : Notification::route('mail', $email)->notify($notification);
+    }
+
+    /** Ends the session's pending code: nothing typed afterwards is right. */
+    public function forget(Request $request): void
+    {
+        $this->codes->forget($request, self::PURPOSE);
     }
 
     /**
-     * Checks a code and uses it up when it's right.
+     * The address this session's pending code was sent to, and what was kept with it.
      *
-     * @return string|null why it was refused (none, expired, origin, attempts, incorrect), or null when it's right
+     * @return array{email: string, data: array<string, mixed>}|null
      */
-    public function consume(Authenticatable $user, string $code, Request $request): ?string
+    public function pending(Request $request): ?array
     {
-        return match ($this->consume->execute($user, preg_replace('/\D/', '', $code) ?? '', $request)) {
-            ConsumeOneTimePasswordResult::Ok => null,
-            ConsumeOneTimePasswordResult::NoOneTimePasswordsFound => 'none',
-            ConsumeOneTimePasswordResult::OneTimePasswordExpired => 'expired',
-            ConsumeOneTimePasswordResult::DifferentOrigin => 'origin',
-            ConsumeOneTimePasswordResult::RateLimitExceeded => 'attempts',
-            default => 'incorrect',
-        };
+        $pending = $this->codes->pending($request, self::PURPOSE);
+
+        return $pending === null ? null : ['email' => (string) $pending['user_id'], 'data' => $pending['data']];
+    }
+
+    /**
+     * Checks a code and uses it up when it's right. Read pending() first:
+     * the right code ends it.
+     *
+     * @return string|null why it was refused (wrong, expired, locked, missing), or null when it's right
+     */
+    public function consume(string $code, Request $request): ?string
+    {
+        $result = $this->codes->check($request, self::PURPOSE, $code);
+
+        return $result === 'ok' ? null : $result;
     }
 
     public function minutes(): int

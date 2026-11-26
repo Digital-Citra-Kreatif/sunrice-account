@@ -6,7 +6,6 @@ namespace Sunrice\Account\Health;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Schema;
-use Spatie\OneTimePasswords\Models\Concerns\HasOneTimePasswords;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 use Sunrice\Account\Auth\Google;
@@ -18,8 +17,8 @@ use Throwable;
 
 /**
  * Whether the app has what accounts need: the user model's traits, the
- * tables, the roles new accounts get, what the switched-on sign-in
- * methods rely on, and mail. `php artisan account:check` prints it, and
+ * tables, the roles new accounts get, what sign in with Google relies
+ * on, and mail. `php artisan account:check` prints it, and
  * `sunrice:install` and `account:install` end with it.
  *
  * Each check only looks (the schema, config, a few rows): nothing is
@@ -38,7 +37,6 @@ final class AccountHealth
             $this->userModel(),
             $this->tables(),
             $this->roles(),
-            $this->loginCodes(),
             $this->google(),
             $this->mail(),
             $this->guard(),
@@ -111,22 +109,6 @@ final class AccountHealth
             $missing !== [] => Check::warning('roles', 'Roles of new accounts', implode(', ', $missing).' '.(count($missing) === 1 ? 'doesn\'t' : 'don\'t').' exist yet (created on the first registration): run php artisan sunrice:roles.'),
             default => Check::ok('roles', 'Roles of new accounts', implode(', ', $names)),
         };
-    }
-
-    private function loginCodes(): Check
-    {
-        if (! $this->settings->loginCode) {
-            return Check::ok('login-codes', 'Sign-in codes', 'Off');
-        }
-        $model = Users::model();
-        if (! in_array(HasOneTimePasswords::class, class_uses_recursive($model), true)) {
-            return Check::error('login-codes', 'Sign-in codes', "On, but {$model} doesn't use the ".HasOneTimePasswords::class.' trait: add it, or switch codes off in Settings → Accounts.');
-        }
-        if (! Schema::hasTable('one_time_passwords')) {
-            return Check::error('login-codes', 'Sign-in codes', 'On, but the one_time_passwords table is missing: publish spatie/laravel-one-time-passwords\' migration and run php artisan migrate.');
-        }
-
-        return Check::ok('login-codes', 'Sign-in codes', 'On');
     }
 
     private function google(): Check

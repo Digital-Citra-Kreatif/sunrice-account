@@ -2,10 +2,14 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
+use Sunrice\Account\Events\Registering;
 use Sunrice\Account\Notifications\LoginCodeNotification;
 use Sunrice\Account\Notifications\WelcomeNotification;
+use Sunrice\Account\Profiles\Models\Profile;
 use Sunrice\Admin\Actions\Permissions\SyncPermissions;
 use Sunrice\Admin\Panel;
 use Workbench\App\Models\User;
@@ -38,7 +42,7 @@ it('is off unless the settings turn it on', function () {
 
 it('signs in with the emailed code, which verifies the email', function () {
     $user = siteUser(['email_verified_at' => null]);
-    $this->get('/en/account/login')->assertSee('Email me a sign-in code');
+    $this->get('/en/account/login')->assertSee('Continue with an emailed code');
 
     $code = requestCode();
     expect($code)->toMatch('/^\d{6}$/');
@@ -53,12 +57,55 @@ it('signs in with the emailed code, which verifies the email', function () {
     $this->post('/account/login/code/check', ['code' => $code])->assertSessionHasErrors('code');
 });
 
-it('answers the same for an email without an account', function () {
+it('makes the account of a new address the code proves, and takes it where it was going', function () {
+    Role::findOrCreate('member', 'web');
+    $this->get('/account/login?return=/blog/first-post')->assertOk()->assertSee('akun Anda langsung dibuat');
+
+    $this->post('/account/login/code', ['email' => 'New.Buyer@Example.com'])->assertRedirect('/account/login/code')->assertSessionHas('account.status');
+    $code = '';
+    Notification::assertSentOnDemand(LoginCodeNotification::class, function (LoginCodeNotification $n, array $channels, object $notifiable) use (&$code) {
+        $code = $n->code;
+
+        return $notifiable->routes['mail'] === 'new.buyer@example.com';
+    });
+    expect(User::query()->where('email', 'new.buyer@example.com')->exists())->toBeFalse();
+
+    $this->post('/account/login/code/check', ['code' => $code])->assertRedirect('/blog/first-post');
+
+    $user = User::query()->where('email', 'new.buyer@example.com')->sole();
+    $this->assertAuthenticatedAs($user, 'account');
+    expect($user->name)->toBe('new.buyer')
+        ->and($user->email_verified_at)->not->toBeNull()
+        ->and($user->hasRole('member'))->toBeTrue()
+        ->and(Profile::forUser($user)->password_set)->toBeFalse();
+    Notification::assertSentToTimes($user, WelcomeNotification::class, 1);
+});
+
+it('sends no code to an address without an account while registration is closed', function () {
+    accountSettings(['registration' => false]);
     $this->post('/account/login/code', ['email' => 'who@example.com'])->assertRedirect('/account/login/code')->assertSessionHas('account.status');
 
     Notification::assertNothingSent();
     $this->post('/account/login/code/check', ['code' => '123456'])->assertSessionHasErrors('code');
     $this->assertGuest('account');
+    expect(User::query()->count())->toBe(0);
+});
+
+it('lets a plugin refuse an account a code would make', function () {
+    Event::listen(Registering::class, function (Registering $event): void {
+        throw ValidationException::withMessages(['code' => 'Not this address.']);
+    });
+    $this->post('/account/login/code', ['email' => 'new@example.com']);
+    $code = '';
+    Notification::assertSentOnDemand(LoginCodeNotification::class, function (LoginCodeNotification $n) use (&$code) {
+        $code = $n->code;
+
+        return true;
+    });
+
+    $this->post('/account/login/code/check', ['code' => $code])->assertSessionHasErrors(['code' => 'Not this address.']);
+    $this->assertGuest('account');
+    expect(User::query()->count())->toBe(0);
 });
 
 /** Every failure reads the same: an email with no account gets it too. */
@@ -80,16 +127,18 @@ it('refuses wrong codes, and every try for a minute after five', function () {
     $this->assertGuest('account');
 });
 
-it('refuses an expired code, and a code used in another browser', function () {
+it('refuses an expired code, and a code typed in another browser', function () {
     siteUser();
     $code = requestCode();
-
-    $this->withHeader('User-Agent', 'Another browser')->post('/account/login/code/check', ['code' => $code])->assertSessionHasErrors('code');
-    expect(session('errors')->first('code'))->toBe(INCORRECT_CODE);
 
     $this->travel(11)->minutes();
     $this->post('/account/login/code/check', ['code' => $code])->assertSessionHasErrors('code');
     expect(session('errors')->first('code'))->toBe(INCORRECT_CODE);
+
+    // A code belongs to the session that asked for it.
+    $code = requestCode();
+    $this->flushSession();
+    $this->post('/account/login/code/check', ['code' => $code])->assertSessionHasErrors('code');
     $this->assertGuest('account');
 });
 

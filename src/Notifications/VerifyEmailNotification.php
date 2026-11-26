@@ -15,6 +15,12 @@ use Sunrice\Account\Emails\Emails;
 /** The link that verifies an account's email address, in the language it was sent in. */
 final class VerifyEmailNotification extends AccountEmail
 {
+    /** @param  string|null  $return  where the link leads on to once it has signed the account in (an address of this site) */
+    public function __construct(string $lang, public readonly ?string $return = null)
+    {
+        parent::__construct($lang);
+    }
+
     public static function key(): string
     {
         return Emails::VERIFY;
@@ -28,7 +34,7 @@ final class VerifyEmailNotification extends AccountEmail
 
         return $mail
             ->line($this->text('intro'))
-            ->action($this->text('action'), Verification::url($notifiable, $this->lang))
+            ->action($this->text('action'), Verification::url($notifiable, $this->lang, $this->return))
             ->line($this->text('ignore'));
     }
 }

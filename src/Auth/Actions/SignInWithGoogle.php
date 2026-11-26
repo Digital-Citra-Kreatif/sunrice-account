@@ -4,19 +4,13 @@ declare(strict_types=1);
 
 namespace Sunrice\Account\Auth\Actions;
 
-use Illuminate\Auth\Events\Registered as LaravelRegistered;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Laravel\Socialite\Contracts\User as SocialUser;
 use Laravel\Socialite\Two\User as OAuthUser;
 use Sunrice\Account\Auth\SiteGuard;
 use Sunrice\Account\Auth\Users;
-use Sunrice\Account\Events\Registered;
 use Sunrice\Account\Events\SignedIn;
-use Sunrice\Account\Profiles\Models\Profile;
 use Sunrice\Account\Settings\AccountSettings;
 use Sunrice\Admin\Security\AccountGuard;
 
@@ -32,7 +26,7 @@ final class SignInWithGoogle
 
     public function __construct(
         private AccountSettings $settings,
-        private AssignDefaultRoles $roles,
+        private CreateProvenAccount $create,
         private VerifyEmail $verify,
         private AccountGuard $accounts,
     ) {}
@@ -54,7 +48,7 @@ final class SignInWithGoogle
             if (! $this->settings->registration || $email === '' || ! $verified) {
                 return 'no_account';
             }
-            $user = $this->create($google, $email, $locale);
+            $user = $this->create->handle($email, (string) $google->getName(), $locale);
             $created = true;
         }
         if (SiteGuard::refusesStaff($user)) {
@@ -69,34 +63,12 @@ final class SignInWithGoogle
         }
         if ($verified) {
             // A Google-verified address: an unverified account with it loses what someone else may have set.
-            $created ? $this->verify->handle($user, $locale) : $this->verify->claim($user, $locale);
-        }
-        if ($created) {
-            event(new LaravelRegistered($user));
-            event(new Registered($user, Profile::forUser($user), ['name' => $user->getAttribute('name'), 'email' => $email], $locale));
+            $this->verify->claim($user, $locale);
         }
 
         SiteGuard::get()->login($user, true);
         event(new SignedIn($user, 'google', true));
 
         return $user;
-    }
-
-    private function create(SocialUser $google, string $email, string $locale): Model&Authenticatable
-    {
-        return DB::transaction(function () use ($google, $email, $locale): Model&Authenticatable {
-            $model = Users::model();
-            $user = new $model;
-            $name = trim((string) $google->getName());
-            $user->forceFill([
-                'name' => $name !== '' ? $name : Str::before($email, '@'),
-                'email' => $email,
-                'password' => Hash::make(Str::random(40)),
-            ])->save();
-            $this->roles->handle($user);
-            Profile::forUser($user)->forceFill(['locale' => $locale, 'password_set' => false])->save();
-
-            return $user;
-        });
     }
 }

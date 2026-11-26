@@ -31,6 +31,28 @@ final class Redirects
         return AccountRoutes::url('sunrice.account.dashboard');
     }
 
+    /**
+     * A sign-in or registration page opened with `?return=` (a path or a URL
+     * of this site): that is where signing in leads back to. Anything else
+     * is ignored, and what a guarded page already noted stays.
+     */
+    public static function remember(Request $request): void
+    {
+        $return = $request->query('return');
+        $target = is_string($return) && $return !== '' ? self::siteUrl($request, $return) : null;
+        if ($target !== null && $request->hasSession()) {
+            $request->session()->put(Authenticate::INTENDED, $target);
+        }
+    }
+
+    /** Where the visitor was going, when a page noted it (not taken out of the session). */
+    public static function intended(Request $request): ?string
+    {
+        $intended = $request->hasSession() ? $request->session()->get(Authenticate::INTENDED) : null;
+
+        return is_string($intended) && self::onThisSite($request, $intended) ? $intended : null;
+    }
+
     /** The home page in the current language. */
     public static function home(): string
     {

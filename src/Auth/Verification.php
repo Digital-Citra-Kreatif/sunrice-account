@@ -23,8 +23,8 @@ final class Verification
         return $user instanceof Model && $user->getAttribute('email_verified_at') !== null;
     }
 
-    /** The signed verification link of a user's current email, in a language. */
-    public static function url(Model&Authenticatable $user, string $locale): string
+    /** The signed verification link of a user's current email, in a language, leading on to `$return` (an address of this site) once it has signed them in. */
+    public static function url(Model&Authenticatable $user, string $locale, ?string $return = null): string
     {
         $minutes = config('auth.verification.expire', 1440);
 
@@ -32,6 +32,8 @@ final class Verification
             'id' => $user->getAuthIdentifier(),
             'hash' => self::hash($user),
             'lang' => $locale,
+            // Where they were going when they registered: the link may be opened in another browser, without that session.
+            ...($return !== null && $return !== '' ? ['return' => $return] : []),
         ]);
     }
 

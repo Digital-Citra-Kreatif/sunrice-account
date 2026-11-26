@@ -1,4 +1,4 @@
-{{-- Enter the emailed sign-in code. $email (where it went), $remember ("Keep me signed in" as ticked when it was asked for). --}}
+{{-- Enter the emailed sign-in code. $email (where it went), $open (every address gets a code: visitors can register), $remember ("Keep me signed in" as ticked when it was asked for). --}}
 @extends(\Sunrice\Account\View\Layout::site())
 @include(\Sunrice\Account\View\Layout::view('partials.push-styles'))
 
@@ -6,7 +6,7 @@
     <section class="account-auth">
         <h1 class="account-auth__title">{{ __('account::auth.code.title') }}</h1>
         @include(\Sunrice\Account\View\Layout::view('partials.messages'))
-        <p>{{ __('account::auth.code.where', ['email' => $email]) }}</p>
+        <p>{{ __(($open ?? false) ? 'account::auth.code.where_open' : 'account::auth.code.where', ['email' => $email]) }}</p>
         <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.code.consume') }}" class="account-form">
             @csrf
             <label class="account-field"><span>{{ __('account::auth.code.label') }}</span>

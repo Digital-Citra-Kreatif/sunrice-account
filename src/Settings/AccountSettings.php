@@ -98,8 +98,8 @@ final class AccountSettings extends Settings
 
     // Sign-in
 
-    /** Sign in with a code sent by email. */
-    public bool $loginCode = false;
+    /** Sign in with a code sent by email, which also creates the account of a new address while visitors can register. */
+    public bool $loginCode = true;
 
     /** How long a sign-in code works, in minutes (1–60). */
     public int $codeMinutes = 10;

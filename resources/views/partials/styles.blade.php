@@ -28,6 +28,7 @@
     .account-button--danger { color: var(--account-danger); border-color: currentColor; }
     .account-link { font: inherit; background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
     .account-auth__link { font-size: .9rem; color: var(--account-muted); }
+    .account-auth__hint { color: var(--account-muted); font-size: .9rem; margin: 0 0 .75rem; }
     .account-auth__or { text-align: center; color: var(--account-muted); font-size: .85rem; margin: 1.25rem 0; }
     .account-auth__alt { margin: 1.25rem 0 0; font-size: .9rem; color: var(--account-muted); }
     .account-message { padding: .75rem 1rem; border-radius: 8px; border: 1px solid var(--account-line); margin: 0 0 1rem; font-size: .9rem; }
