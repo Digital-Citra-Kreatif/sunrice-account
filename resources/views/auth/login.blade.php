@@ -13,6 +13,9 @@
         {{-- No honeypot here: password managers fill and send sign-in forms at once, and sign-in is throttled. --}}
         <form method="POST" action="{{ \Sunrice\Account\Routing\AccountRoutes::url('sunrice.account.login.attempt') }}" class="account-form">
             @csrf
+            {{-- Enter in a field presses a form's first submit button: this one, so it signs in with the password typed
+                 (and, with none typed, goes on to a code when codes are on), whichever button is drawn first. --}}
+            <button type="submit" formnovalidate tabindex="-1" aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);border:0;padding:0;margin:-1px;"></button>
             <label class="account-field"><span>{{ __('account::auth.fields.email') }}</span>
                 <input type="email" name="email" @include(\Sunrice\Account\View\Layout::view('partials.aria'), ['name' => 'email']) value="{{ old('email') }}" required autocomplete="email" autofocus>
                 @include(\Sunrice\Account\View\Layout::view('partials.field-error'), ['name' => 'email'])

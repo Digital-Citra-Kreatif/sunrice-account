@@ -1,10 +1,13 @@
 {{--
-    Plain styles for the account pages in the package's minimal layout (a
-    site without its own layout). A site's theme styles the same
-    account-* classes itself; this isn't included in the site's layout.
+    Plain styles for the account-* classes, pushed to the layout's head (the
+    package's minimal layout and a site's own alike). A theme restyles them
+    by setting the --account-* colours, or its own rules for the classes.
 --}}
 <style nonce="{{ cms_nonce() }}">
-    .account-site { color-scheme: light dark; --account-fg: #18181b; --account-muted: #71717a; --account-bg: #fafafa; --account-card: #fff; --account-line: #e4e4e7; --account-field-line: #8a8a93; --account-accent: #18181b; --account-on-accent: #fff; --account-danger: #b91c1c; --account-success: #15803d; }
+    /* The colours, for any layout: the package's own and a theme's (which sets its own over them, on :root or below).
+       Dark colours only in the package's layout: a theme decides its own scheme. */
+    :where(:root) { --account-fg: #18181b; --account-muted: #71717a; --account-bg: #fafafa; --account-card: #fff; --account-line: #e4e4e7; --account-field-line: #8a8a93; --account-accent: #18181b; --account-on-accent: #fff; --account-danger: #b91c1c; --account-success: #15803d; }
+    .account-site { color-scheme: light dark; }
     @media (prefers-color-scheme: dark) { .account-site { --account-fg: #f4f4f5; --account-muted: #a1a1aa; --account-bg: #09090b; --account-card: #18181b; --account-line: #27272a; --account-field-line: #71717a; --account-accent: #f4f4f5; --account-on-accent: #18181b; --account-danger: #f87171; --account-success: #4ade80; } }
     .account-body { margin: 0; background: var(--account-bg); color: var(--account-fg); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
     .account-main { max-width: 64rem; margin: 0 auto; padding: 2.5rem 1rem 4rem; box-sizing: border-box; }

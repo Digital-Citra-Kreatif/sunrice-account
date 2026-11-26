@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.1 (2026-11-27)
+
+- **Enter signs in with the password again.** With "Continue with an emailed code" drawn first, Enter
+  in the password field pressed that button and sent a code instead of signing in. The form's
+  first submit button is now a hidden one that posts to the password sign-in; with no password
+  typed (and codes on) it goes on to the code, so Enter does the right thing either way.
+- **The account pages are styled in a site's own layout too.** Their colours (`--account-*`) were
+  only set in the package's minimal layout, so in a theme's layout buttons and fields had no
+  background or border. They are now set for any layout, at the lowest specificity: a theme
+  overrides them on `:root`. Dark colours still apply only in the package's own layout.
+- Docs: the settings table said the emailed code is off by default; it is on.
+
 ## 0.2.0 (2026-11-26)
 
 - **One field to sign in or sign up.** "Continue with an emailed code" is now the sign-in page's
